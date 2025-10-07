@@ -1,0 +1,253 @@
+const { realizarQuery } = require('./modulos/mysql');
+const port = process.env.PORT || 4000;
+
+const express = require("express");
+const cors = require("cors");
+const session = require("express-session");
+
+const app = express(); // Inicializamos Express
+
+// Middlewares
+app.use(express.json());
+app.use(cors());
+
+const server = app.listen(port, () => {
+	console.log(`Servidor NodeJS corriendo en http://localhost:${port}/`);
+});;
+
+const io = require('socket.io')(server, {
+	cors: {
+		// IMPORTANTE: REVISAR PUERTO DEL FRONTEND
+		origin: ["http://localhost:3000", "http://localhost:3001"], // Permitir el origen localhost:3000
+		methods: ["GET", "POST", "PUT", "DELETE"],  	// Métodos permitidos
+		credentials: true                           	// Habilitar el envío de cookies
+	}
+});
+
+const sessionMiddleware = session({
+	//Elegir tu propia key secreta
+	secret: "supersarasa",
+	resave: false,
+	saveUninitialized: false
+});
+
+app.use(sessionMiddleware);
+
+io.use((socket, next) => {
+	sessionMiddleware(socket.request, {}, next);
+});
+
+/*
+	A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
+	A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
+	A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
+*/
+
+io.on("connection", (socket) => {
+	const req = socket.request;
+
+	socket.on('joinRoom', data => {
+		console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
+		if (req.session.room != undefined && req.session.room.length > 0)
+			socket.leave(req.session.room);
+		req.session.room = data.room;
+		socket.join(req.session.room);
+
+		io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
+	});
+
+	socket.on('pingAll', data => {
+		console.log("PING ALL: ", data);
+		io.emit('pingAll', { event: "Ping to all", message: data });
+	});
+
+	// Evento para enviar mensajes y emitirlos correctamente a la sala
+	socket.on('sendMessage', data => {
+		io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
+	});
+
+	socket.on('disconnect', () => {
+		console.log("Disconnect");
+	})
+});
+
+// ======================================
+// LOGIN Y REGISTRO
+// ======================================
+
+// 🔹 LOGIN
+app.post("/usuarioLogin", async (req, res) => {
+  const { gmail, contraseña } = req.body;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM Usuario WHERE gmail = ? AND contraseña = ?",
+      [gmail, contraseña]
+    );
+
+    if (rows.length === 1) {
+      res.send({ ok: true, usuario: rows[0] });
+    } else {
+      res.send({ ok: false, mensaje: "Usuario o contraseña incorrectos" });
+    }
+  } catch (err) {
+    res.status(500).send({ ok: false, error: err.message });
+  }
+});
+
+// 🔹 REGISTRO
+app.post("/usuarioRegistro", async (req, res) => {
+  const { nombre, apellido, gmail, contraseña } = req.body;
+
+  try {
+    const [existe] = await db.query("SELECT * FROM Usuario WHERE gmail = ?", [gmail]);
+    if (existe.length > 0) {
+      return res.send({ ok: false, mensaje: "Ya existe un usuario con ese correo" });
+    }
+
+    const [result] = await db.query(
+      "INSERT INTO Usuario (nombre, apellido, gmail, contraseña) VALUES (?, ?, ?, ?)",
+      [nombre, apellido, gmail, contraseña]
+    );
+
+    res.send({ ok: true, id_usuario: result.insertId, mensaje: "Usuario registrado correctamente" });
+  } catch (err) {
+    res.status(500).send({ ok: false, error: err.message });
+  }
+});
+
+// ======================================
+// USUARIOS
+// ======================================
+app.get("/usuarios", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM Usuario");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// JUGADORES
+// ======================================
+app.get("/jugadores", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM Jugadores");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/jugadores", async (req, res) => {
+  const { nombre_jugador, img_url } = req.body;
+  try {
+    const [result] = await db.query(
+      "INSERT INTO Jugadores (nombre_jugador, img_url) VALUES (?, ?)",
+      [nombre_jugador, img_url]
+    );
+    res.json({ id_jugador: result.insertId, nombre_jugador, img_url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// PARTIDAS
+// ======================================
+app.get("/partidas", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT p.id_partida, p.estado, u.nombre AS nombre_ganador, u.apellido AS apellido_ganador
+      FROM Partidas p
+      LEFT JOIN Usuario u ON p.id_ganador = u.id_usuario
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/partidas", async (req, res) => {
+  const { estado, id_ganador } = req.body;
+  try {
+    const [result] = await db.query(
+      "INSERT INTO Partidas (estado, id_ganador) VALUES (?, ?)",
+      [estado || "En curso", id_ganador || null]
+    );
+    res.json({ id_partida: result.insertId, estado, id_ganador });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// USUARIOS POR PARTIDA
+// ======================================
+app.get("/usuariosPorPartida/:id_partida", async (req, res) => {
+  const { id_partida } = req.params;
+  try {
+    const [rows] = await db.query(`
+      SELECT upp.id_usuariosPorPartida, u.nombre, u.apellido, j.nombre_jugador, j.img_url
+      FROM UsuariosPorPartida upp
+      JOIN Usuario u ON upp.id_usuario = u.id_usuario
+      JOIN Jugadores j ON upp.id_jugador = j.id_jugador
+      WHERE upp.id_partida = ?
+    `, [id_partida]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/usuariosPorPartida", async (req, res) => {
+  const { id_usuario, id_partida, id_jugador } = req.body;
+  try {
+    const [result] = await db.query(
+      "INSERT INTO UsuariosPorPartida (id_usuario, id_partida, id_jugador) VALUES (?, ?, ?)",
+      [id_usuario, id_partida, id_jugador]
+    );
+    res.json({ id_usuariosPorPartida: result.insertId, id_usuario, id_partida, id_jugador });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// MENSAJES
+// ======================================
+app.get("/mensajes/:id_partida", async (req, res) => {
+  const { id_partida } = req.params;
+  try {
+    const [rows] = await db.query(`
+      SELECT m.id_mensaje, m.contenido, m.fecha_envio, u.nombre, u.apellido
+      FROM Mensajes m
+      JOIN Usuario u ON m.id_usuario = u.id_usuario
+      WHERE m.id_partida = ?
+      ORDER BY m.fecha_envio ASC
+    `, [id_partida]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/mensajes", async (req, res) => {
+  const { contenido, id_usuario, id_partida } = req.body;
+  try {
+    const [result] = await db.query(
+      "INSERT INTO Mensajes (contenido, id_usuario, id_partida) VALUES (?, ?, ?)",
+      [contenido, id_usuario, id_partida]
+    );
+    res.json({ id_mensaje: result.insertId, contenido, id_usuario, id_partida });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================
+// INICIO DEL SERVIDOR
+// ======================================
+
+
