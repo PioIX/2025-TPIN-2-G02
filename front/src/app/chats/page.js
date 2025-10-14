@@ -383,7 +383,8 @@ export default function Chats() {
     <div className={styles.mainBgGradient}>
       <div className={styles.whatsappContainer + " " + poppins.className}>
         <div className={styles.sidebar}>
-          <div className={styles.title}>CHATS</div>
+          {/* Header eliminado del sidebar, solo queda el título */}
+          <div className={styles.title}>OPONENTES</div>
           <NuevoChatButton onCreate={handleCreateChat} idLoggued={idLoggued} />
           <div className={styles["chats-list"]}>
             {chat.length > 0 ? (
@@ -421,6 +422,29 @@ export default function Chats() {
       </div>
 
       <div className={styles.chatArea}>
+        {/* Header superior con oponente y mi jugador */}
+        <div className={styles.topHeader}>
+          <div className={styles.headerCol}>
+            <span className={styles.headerLabel}>Oponente:</span>
+            {/* Imagen del oponente (primer chat seleccionado o null) */}
+            {selectedChat && !selectedChat.es_grupo && selectedChat.participantes ? (
+              <img
+                src={selectedChat.participantes.find(u => String(u.id_usuario) !== String(idLoggued))?.foto_url || "/window.svg"}
+                alt="Oponente"
+                className={styles.avatar}
+              />
+            ) : (
+              <img src="/window.svg" alt="Oponente" className={styles.avatar} />
+            )}
+          </div>
+          <div className={styles.headerCol}>
+            <span className={styles.headerLabel}>Mi Jugador:</span>
+            {/* Aquí deberías mostrar la imagen del usuario logueado. Ejemplo:
+                  <img src={usuarioLogueado.foto_url} alt="Mi Jugador" className={styles.avatar} />
+                 usuarioLogueado debe ser un objeto con la propiedad foto_url, obtenido del contexto, props o base de datos. */}
+            <img src="/window.svg" alt="Mi Jugador" className={styles.avatar} />
+          </div>
+        </div>
         {selectedChat ? (
           <div className={styles.chatContent}>
             <h2>
