@@ -93,7 +93,7 @@ function NuevoChatButton({ onCreate, idLoggued }) {
         className={styles.nuevoChatButton + ' ' + poppins.className}
         type="button"
       >
-        Nuevo chat
+        Nuevo Oponente
       </button>
 
       <Popup
@@ -212,6 +212,7 @@ function Chat({ nombre, description, foto_url }) {
 export default function Chats() {
   const [chat, setChat] = useState([]);
   const [idLoggued, setIdLoggued] = useState(null);
+  const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Nuevo estado para el usuario logueado
   const [selectedChat, setSelectedChat] = useState(null);
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState("");
@@ -232,7 +233,7 @@ export default function Chats() {
     };
   }, []);
 
-  // Cargar chats al montar el componente
+  // Cargar chats y usuario logueado al montar el componente
   useEffect(() => {
     const id = localStorage.getItem("idLoggued")
     setIdLoggued(id)
@@ -255,7 +256,30 @@ export default function Chats() {
       }
     }
 
-    if (id) chatsperuser(id)
+    async function dataUserLoggued(){
+      const idLoggued = localStorage.getItem("idLoggued")
+      let reuslt = await fetch('http://localhost:4000/')
+    }
+
+    async function fetchUsuarioLogueado(id_usuario) {
+      try {
+        const res = await fetch(`http://localhost:4000/usuarioRegistro?id_usuario=${id_usuario}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const user = data.find(u => String(u.id_usuario) === String(id_usuario));
+          setUsuarioLogueado(user);
+        } else if (data && data.id_usuario) {
+          setUsuarioLogueado(data);
+        }
+      } catch (err) {
+        setUsuarioLogueado(null);
+      }
+    }
+
+    if (id) {
+      chatsperuser(id);
+      fetchUsuarioLogueado(id);
+    }
   }, [])
 
   // Crear un nuevo chat
@@ -415,7 +439,7 @@ export default function Chats() {
                 );
               })
             ) : (
-              <div className={styles["no-chats"]}>Sin chats</div>
+              <div className={styles["no-chats"]}>Sin oponentes</div>
             )}
           </div>
         </div>
@@ -439,10 +463,12 @@ export default function Chats() {
           </div>
           <div className={styles.headerCol}>
             <span className={styles.headerLabel}>Mi Jugador:</span>
-            {/* Aquí deberías mostrar la imagen del usuario logueado. Ejemplo:
-                  <img src={usuarioLogueado.foto_url} alt="Mi Jugador" className={styles.avatar} />
-                 usuarioLogueado debe ser un objeto con la propiedad foto_url, obtenido del contexto, props o base de datos. */}
-            <img src="/window.svg" alt="Mi Jugador" className={styles.avatar} />
+            {/* Mostrar imagen del usuario logueado */}
+            {usuarioLogueado && usuarioLogueado.foto_url ? (
+              <img src={usuarioLogueado.foto_url} alt="Mi Jugador" className={styles.avatar} />
+            ) : (
+              <img src="/window.svg" alt="Mi Jugador" className={styles.avatar} />
+            )}
           </div>
         </div>
         {selectedChat ? (
