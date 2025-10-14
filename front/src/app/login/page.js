@@ -36,7 +36,7 @@ export default function LoginPage() {
       const res = await fetch("http://localhost:4000/usuarioLogin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ gmail: email, contraseña: password })
       });
 
       const data = await res.json();
@@ -49,7 +49,7 @@ export default function LoginPage() {
         console.log("Usuario logueado:", data.usuario);
 
         // Redirigir al home o a la página principal de la app
-        router.push("/home");
+        router.push("/chats");
       } else {
         // Si credenciales incorrectas
         setError(data.mensaje || "Usuario o contraseña incorrectos");
