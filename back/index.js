@@ -77,14 +77,13 @@ io.on("connection", (socket) => {
 
 // 🔹 LOGIN
 app.post("/usuarioLogin", async (req, res) => {
+  console.log("Login body:", req.body);
   const { gmail, contraseña } = req.body;
-
   try {
-    const [rows] = await db.query(
+    const rows = await realizarQuery(
       "SELECT * FROM Usuario WHERE gmail = ? AND contraseña = ?",
       [gmail, contraseña]
     );
-
     if (rows.length === 1) {
       res.send({ ok: true, usuario: rows[0] });
     } else {
@@ -98,18 +97,15 @@ app.post("/usuarioLogin", async (req, res) => {
 // 🔹 REGISTRO
 app.post("/usuarioRegistro", async (req, res) => {
   const { nombre, apellido, gmail, contraseña } = req.body;
-
   try {
-    const [existe] = await db.query("SELECT * FROM Usuario WHERE gmail = ?", [gmail]);
+    const existe = await realizarQuery("SELECT * FROM Usuario WHERE gmail = ?", [gmail]);
     if (existe.length > 0) {
       return res.send({ ok: false, mensaje: "Ya existe un usuario con ese correo" });
     }
-
-    const [result] = await db.query(
+    const result = await realizarQuery(
       "INSERT INTO Usuario (nombre, apellido, gmail, contraseña) VALUES (?, ?, ?, ?)",
       [nombre, apellido, gmail, contraseña]
     );
-
     res.send({ ok: true, id_usuario: result.insertId, mensaje: "Usuario registrado correctamente" });
   } catch (err) {
     res.status(500).send({ ok: false, error: err.message });
@@ -121,7 +117,7 @@ app.post("/usuarioRegistro", async (req, res) => {
 // ======================================
 app.get("/usuarios", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM Usuario");
+    const rows = await realizarQuery("SELECT * FROM Usuario");
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -133,7 +129,7 @@ app.get("/usuarios", async (req, res) => {
 // ======================================
 app.get("/jugadores", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM Jugadores");
+    const rows = await realizarQuery("SELECT * FROM Jugadores");
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -143,7 +139,7 @@ app.get("/jugadores", async (req, res) => {
 app.post("/jugadores", async (req, res) => {
   const { nombre_jugador, img_url } = req.body;
   try {
-    const [result] = await db.query(
+    const result = await realizarQuery(
       "INSERT INTO Jugadores (nombre_jugador, img_url) VALUES (?, ?)",
       [nombre_jugador, img_url]
     );
@@ -158,7 +154,7 @@ app.post("/jugadores", async (req, res) => {
 // ======================================
 app.get("/partidas", async (req, res) => {
   try {
-    const [rows] = await db.query(`
+    const rows = await realizarQuery(`
       SELECT p.id_partida, p.estado, u.nombre AS nombre_ganador, u.apellido AS apellido_ganador
       FROM Partidas p
       LEFT JOIN Usuario u ON p.id_ganador = u.id_usuario
@@ -172,7 +168,7 @@ app.get("/partidas", async (req, res) => {
 app.post("/partidas", async (req, res) => {
   const { estado, id_ganador } = req.body;
   try {
-    const [result] = await db.query(
+    const result = await realizarQuery(
       "INSERT INTO Partidas (estado, id_ganador) VALUES (?, ?)",
       [estado || "En curso", id_ganador || null]
     );
@@ -188,7 +184,7 @@ app.post("/partidas", async (req, res) => {
 app.get("/usuariosPorPartida/:id_partida", async (req, res) => {
   const { id_partida } = req.params;
   try {
-    const [rows] = await db.query(`
+    const rows = await realizarQuery(`
       SELECT upp.id_usuariosPorPartida, u.nombre, u.apellido, j.nombre_jugador, j.img_url
       FROM UsuariosPorPartida upp
       JOIN Usuario u ON upp.id_usuario = u.id_usuario
@@ -204,7 +200,7 @@ app.get("/usuariosPorPartida/:id_partida", async (req, res) => {
 app.post("/usuariosPorPartida", async (req, res) => {
   const { id_usuario, id_partida, id_jugador } = req.body;
   try {
-    const [result] = await db.query(
+    const result = await realizarQuery(
       "INSERT INTO UsuariosPorPartida (id_usuario, id_partida, id_jugador) VALUES (?, ?, ?)",
       [id_usuario, id_partida, id_jugador]
     );
@@ -220,7 +216,7 @@ app.post("/usuariosPorPartida", async (req, res) => {
 app.get("/mensajes/:id_partida", async (req, res) => {
   const { id_partida } = req.params;
   try {
-    const [rows] = await db.query(`
+    const rows = await realizarQuery(`
       SELECT m.id_mensaje, m.contenido, m.fecha_envio, u.nombre, u.apellido
       FROM Mensajes m
       JOIN Usuario u ON m.id_usuario = u.id_usuario
@@ -236,7 +232,7 @@ app.get("/mensajes/:id_partida", async (req, res) => {
 app.post("/mensajes", async (req, res) => {
   const { contenido, id_usuario, id_partida } = req.body;
   try {
-    const [result] = await db.query(
+    const result = await realizarQuery(
       "INSERT INTO Mensajes (contenido, id_usuario, id_partida) VALUES (?, ?, ?)",
       [contenido, id_usuario, id_partida]
     );
