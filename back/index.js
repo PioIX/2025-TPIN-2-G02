@@ -129,10 +129,10 @@ app.get("/usuarios", async (req, res) => {
 // ======================================
 app.get("/jugadores", async (req, res) => {
   try {
-    const rows = await realizarQuery("SELECT * FROM Jugadores");
-    res.json(rows);
+    const players = await realizarQuery("SELECT * FROM Jugadores");
+    res.send({players});
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.send(err.message)
   }
 });
 
