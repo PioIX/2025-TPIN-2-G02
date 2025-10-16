@@ -1,56 +1,91 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Button from "../componentes/Button/Button";
+import Input from "../componentes/Input/input"; 
 import { useRouter } from "next/navigation";
 import styles from "@/app/home/home.module.css";
 
-export default function Home(){
-  const [jugadores, setJugadores] = useState([]);  // Almacenamos los jugadores
-  const [selectedJugador, setSelectedJugador] = useState("");  // Almacenamos el jugador seleccionado
-  const router = useRouter()
-  // El array jugadores ya está ordenado en getJugadores
+export default function Home() {
+  const [jugadores, setJugadores] = useState([]);
+  const [selectedJugador, setSelectedJugador] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
-  // Función para obtener los jugadores desde la API
   useEffect(() => {
     getJugadores();
-  }, []); // Solo se ejecuta una vez al montar el componente
+  }, []);
 
   async function getJugadores() {
     let result = await fetch("http://localhost:4000/jugadores");
     let response = await result.json();
-    // para ordenar los jugadopres alfabéticamente
-    const jugadoresOrdenados = response.players.sort((a, b) => {
-      const nombreA = a.nombre_jugador?.toLowerCase() || "";
-      const nombreB = b.nombre_jugador?.toLowerCase() || "";
-      return nombreA.localeCompare(nombreB);
-    });
-    setJugadores(jugadoresOrdenados);
-    return response;
+    setJugadores(response.players);
   }
 
-    function handleJugar(){
-        router.push("/chats")
+  const filteredJugadores = jugadores.filter(jugador => 
+    jugador.nombre_jugador.toLowerCase().includes(searchTerm.toLowerCase()) //filtra los jugadores que contengan lo que escribí
+  );
+
+  // Manejar cambio en el input de búsqueda
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    // Resetear la selección cuando se escribe
+    setSelectedJugador("");
+  };
+
+  function handleJugar() {
+    if (!selectedJugador) {
+      alert("Por favor, selecciona un jugador primero");
+      return;
     }
+    router.push(`/chats?jugador=${selectedJugador}`);
+  }
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>ELIJA SU JUGADOR PARA COMENZAR </h1>
+      <h1 className={styles.title}>ELIJA SU JUGADOR PARA COMENZAR</h1>
+      
       <div className={styles.searchBox}>
-        <select className={styles.select} value={selectedJugador} onChange={e => setSelectedJugador(e.target.value)}>
-          <option value="">Seleccionar jugador</option>
-          {jugadores.map((jugador) => (
-            <option key={jugador.id_jugador} value={jugador.id_jugador}>
-              {jugador.nombre_jugador}
-            </option>
-          ))}
-        </select>
+        <Input
+          type="text"
+          placeholder="Buscar jugador..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          name="searchJugador"
+        />
       </div>
+
+      {searchTerm && (
+        <div className={styles.searchBox}>
+          <select
+            className={styles.select}
+            value={selectedJugador}
+            onChange={e => setSelectedJugador(e.target.value)}
+            size={Math.min(filteredJugadores.length + 1, 4)} //muestra máximo 4 opciones asi el select no ocupa toda la pantalla
+          >
+            
+            {filteredJugadores.map(jugador => (
+              <option key={jugador.id_jugador} value={jugador.id_jugador}>
+                {jugador.nombre_jugador}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {selectedJugador && (
+        <div className={styles.selectedInfo}>
+          <strong>Jugador seleccionado:</strong> {jugadores.find(j => j.id_jugador === parseInt(selectedJugador))?.nombre_jugador}
+          {/*Busca el jugador por ID, conviértelo a número y muestra su nombre (si existe)*/}
+        </div>
+      )}
+
       <div>
-        <Button onClick={handleJugar} text={"SELECCIONAR"}></Button>
+        <Button 
+          onClick={handleJugar} 
+          text={"SELECCIONAR"}
+        />
       </div>
     </div>
   );
-};
-
-
+}
