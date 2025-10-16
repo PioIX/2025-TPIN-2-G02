@@ -213,6 +213,7 @@ export default function Chats() {
   const [chat, setChat] = useState([]);
   const [idLoggued, setIdLoggued] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Nuevo estado para el usuario logueado
+  const [selectedJugador, setSelectedJugador] = useState(null); // Jugador elegido desde Home
   const [selectedChat, setSelectedChat] = useState(null);
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState("");
@@ -279,6 +280,22 @@ export default function Chats() {
     if (id) {
       chatsperuser(id);
       fetchUsuarioLogueado(id);
+    }
+    // Obtener jugador seleccionado desde Home (localStorage)
+    const idJugadorSeleccionado = localStorage.getItem('selectedJugador');
+    if (idJugadorSeleccionado) {
+      // Obtener lista de jugadores y buscar el seleccionado
+      (async () => {
+        try {
+          const res = await fetch('http://localhost:4000/jugadores');
+          const data = await res.json();
+          const players = data.players || [];
+          const encontrado = players.find(p => String(p.id_jugador) === String(idJugadorSeleccionado));
+          if (encontrado) setSelectedJugador(encontrado);
+        } catch (err) {
+          // no hacer nada si falla
+        }
+      })();
     }
   }, [])
 
@@ -449,22 +466,13 @@ export default function Chats() {
         {/* Header superior con oponente y mi jugador */}
         <div className={styles.topHeader}>
           <div className={styles.headerCol}>
-            <span className={styles.headerLabel}>Oponente:</span>
-            {/* Imagen del oponente (primer chat seleccionado o null) */}
-            {selectedChat && !selectedChat.es_grupo && selectedChat.participantes ? (
-              <img
-                src={selectedChat.participantes.find(u => String(u.id_usuario) !== String(idLoggued))?.foto_url || "/window.svg"}
-                alt="Oponente"
-                className={styles.avatar}
-              />
-            ) : (
-              <img src="/window.svg" alt="Oponente" className={styles.avatar} />
-            )}
           </div>
           <div className={styles.headerCol}>
             <span className={styles.headerLabel}>Mi Jugador:</span>
-            {/* Mostrar imagen del usuario logueado */}
-            {usuarioLogueado && usuarioLogueado.foto_url ? (
+            {/* Mostrar imagen del jugador seleccionado (priorizar sobre usuarioLogueado) */}
+            {selectedJugador && selectedJugador.img_url ? (
+              <img src={selectedJugador.img_url} alt="Mi Jugador" className={styles.avatar} />
+            ) : usuarioLogueado && usuarioLogueado.foto_url ? (
               <img src={usuarioLogueado.foto_url} alt="Mi Jugador" className={styles.avatar} />
             ) : (
               <img src="/window.svg" alt="Mi Jugador" className={styles.avatar} />
