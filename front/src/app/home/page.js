@@ -30,7 +30,13 @@ export default function Home(){
   }
 
     function handleJugar(){
-        router.push("/chats")
+          // Guardar la selección en localStorage para que otras páginas (ej. chats) la puedan leer
+          if (selectedJugador) {
+            localStorage.setItem('selectedJugador', selectedJugador);
+          } else {
+            localStorage.removeItem('selectedJugador');
+          }
+          router.push("/chats")
     }
 
   return (
