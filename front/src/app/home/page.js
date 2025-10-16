@@ -33,12 +33,16 @@ export default function Home() {
     setSelectedJugador("");
   };
 
-  function handleJugar() {
-    if (!selectedJugador) {
-      alert("Por favor, selecciona un jugador primero");
-      return;
+
+    function handleJugar(){
+          // Guardar la selección en localStorage para que otras páginas (ej. chats) la puedan leer
+          if (selectedJugador) {
+            localStorage.setItem('selectedJugador', selectedJugador);
+          } else {
+            localStorage.removeItem('selectedJugador');
+          }
+          router.push(`/chats?jugador=${selectedJugador}`);
     }
-    router.push(`/chats?jugador=${selectedJugador}`);
   }
 
   return (
