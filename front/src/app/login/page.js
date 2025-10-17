@@ -49,7 +49,7 @@ export default function LoginPage() {
         console.log("Usuario logueado:", data.usuario);
 
         // Redirigir al home o a la página principal de la app
-        router.push("/chats");
+        router.push("/home");
       } else {
         // Si credenciales incorrectas
         setError(data.mensaje || "Usuario o contraseña incorrectos");

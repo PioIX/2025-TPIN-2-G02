@@ -1,95 +1,69 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Button from "../componentes/Button/Button";
-import Input from "../componentes/Input/input"; 
+import Button from "@/app/componentes/Button/Button";
+import Input from "@/app/componentes/Input/input"; 
+import Title from "@/app/componentes/Title/Title";
+import styles from "./home.module.css";
+import { useSocket } from "@/hooks/useSocket";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "@/app/home/home.module.css";
 
-export default function Home() {
-  const [jugadores, setJugadores] = useState([]);
-  const [selectedJugador, setSelectedJugador] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const router = useRouter();
+export default function socketPage() {
+    const { socket, isConnected } = useSocket();
+    const router = useRouter();
 
-  useEffect(() => {
-    getJugadores();
-  }, []);
+    useEffect(() => {
+        if (!socket) return;
 
-  async function getJugadores() {
-    let result = await fetch("http://localhost:4000/jugadores");
-    let response = await result.json();
-    setJugadores(response.players);
-  }
+        const handlePingAll = (recibido) => {
+            console.log("PING RECIBIDO: ", recibido);
+        };
 
-  const filteredJugadores = jugadores.filter(jugador => 
-    jugador.nombre_jugador.toLowerCase().includes(searchTerm.toLowerCase()) //filtra los jugadores que contengan lo que escribí
-  );
+        const handleNewMessage = (data) => {
+            console.log("MENSAJE NUEVO: ", data);
+        };
 
-  // Manejar cambio en el input de búsqueda
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    // Resetear la selección cuando se escribe
-    setSelectedJugador("");
-  };
+        socket.on("pingAll", handlePingAll);
+        socket.on("newMessage", handleNewMessage);
 
+        return () => {
+            // Limpieza de eventos al desmontar el componente
+            socket.off("pingAll", handlePingAll);
+            socket.off("newMessage", handleNewMessage);
+        };
+    }, [socket]);
 
-    function handleJugar(){
-          // Guardar la selección en localStorage para que otras páginas (ej. chats) la puedan leer
-          if (selectedJugador) {
-            localStorage.setItem('selectedJugador', selectedJugador);
-          } else {
-            localStorage.removeItem('selectedJugador');
-          }
-          router.push(`/chats?jugador=${selectedJugador}`);
+    function pingAll() {
+        if (isConnected) {
+            socket.emit("pingAll", { mensaje: "ping desde el front" });
+        } else {
+            console.error("Socket no está conectado");
+        }
     }
-  }
 
-  return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>ELIJA SU JUGADOR PARA COMENZAR</h1>
-      
-      <div className={styles.searchBox}>
-        <Input
-          type="text"
-          placeholder="Buscar jugador..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          name="searchJugador"
-        />
-      </div>
+    function joinRoom() {
+        if (isConnected) {
+            socket.emit("joinRoom", { room: "pio" });
+            router.push("/jugador");
+        } else {
+            console.error("Socket no está conectado");
+        }
+    }
 
-      {searchTerm && (
-        <div className={styles.searchBox}>
-          <select
-            className={styles.select}
-            value={selectedJugador}
-            onChange={e => setSelectedJugador(e.target.value)}
-            size={Math.min(filteredJugadores.length + 1, 4)} //muestra máximo 4 opciones asi el select no ocupa toda la pantalla
-          >
-            
-            {filteredJugadores.map(jugador => (
-              <option key={jugador.id_jugador} value={jugador.id_jugador}>
-                {jugador.nombre_jugador}
-              </option>
-            ))}
-          </select>
+    return (
+        <div className={styles.container}>
+            <div className={styles.card}>
+                <Title text={"Bienvenido"} />
+
+                <p className={styles.notice}>Conecta con el servidor para jugar.</p>
+
+                <div className={styles.controls}>
+                    <div className={styles.actions}>
+                        {/*<Button text={"PingAll"} onClick={pingAll} />*/}
+                        <Button text={"Unirse a la sala"} onClick={joinRoom} />
+                    </div>
+                </div>
+            </div>
         </div>
-      )}
-
-      {selectedJugador && (
-        <div className={styles.selectedInfo}>
-          <strong>Jugador seleccionado:</strong> {jugadores.find(j => j.id_jugador === parseInt(selectedJugador))?.nombre_jugador}
-          {/*Busca el jugador por ID, conviértelo a número y muestra su nombre (si existe)*/}
-        </div>
-      )}
-
-      <div>
-        <Button 
-          onClick={handleJugar} 
-          text={"SELECCIONAR"}
-        />
-      </div>
-    </div>
-  );
+    );
 }
