@@ -112,6 +112,22 @@ app.post("/usuarioRegistro", async (req, res) => {
   }
 });
 
+// Permitir obtener usuarios vía GET (lista completa o por id)
+app.get('/usuarioRegistro', async (req, res) => {
+  try {
+    const { id_usuario } = req.query;
+    if (id_usuario) {
+      const rows = await realizarQuery('SELECT * FROM Usuario WHERE id_usuario = ?', [id_usuario]);
+      if (rows.length === 1) return res.json(rows[0]);
+      return res.json(rows);
+    }
+    const rows = await realizarQuery('SELECT * FROM Usuario');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ======================================
 // USUARIOS
 // ======================================
@@ -239,6 +255,32 @@ app.post("/mensajes", async (req, res) => {
     res.json({ id_mensaje: result.insertId, contenido, id_usuario, id_partida });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Rutas básicas para chats - endpoint mínimo para evitar 404 en el front
+// Nota: la implementación completa de chats/participantes requiere tablas adicionales.
+app.post('/chatsUsuario', async (req, res) => {
+  try {
+    const { id_usuario, nuevoChat } = req.body || {};
+
+    // Caso: petición para crear un chat (frontend envía `nuevoChat`)
+    if (nuevoChat) {
+      // Aquí debería crearse la lógica para insertar chat y participantes en la BD.
+      // Por ahora devolvemos un mensaje indicando que la funcionalidad no está implementada.
+      return res.json({ ok: false, mensaje: 'Creación de chats no implementada en el backend (aún).' });
+    }
+
+    // Caso: petición para obtener chats de un usuario
+    if (id_usuario) {
+      // Implementación mínima: devolver lista vacía para que el front no obtenga HTML 404.
+      // Reemplazar por consulta real cuando exista la estructura de chats en la BD.
+      return res.json({ ok: true, chats: [] });
+    }
+
+    return res.status(400).json({ ok: false, mensaje: 'Faltan parámetros (id_usuario o nuevoChat).' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

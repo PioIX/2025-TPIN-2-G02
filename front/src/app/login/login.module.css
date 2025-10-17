@@ -5,7 +5,7 @@
   height: 100vh;
 
   /* Fondo en degradado monocromático */
-  background: linear-gradient(135deg, #000000, #434343);
+  background: radial-gradient(circle at 0 0, #2a3a7a 0%, #181a2a 40%, #181a2a 100%);
   /* Si quieres usar imagen de fondo en escala de grises:
   background: url('/fondo.jpg') no-repeat center center/cover;
   filter: grayscale(100%); */

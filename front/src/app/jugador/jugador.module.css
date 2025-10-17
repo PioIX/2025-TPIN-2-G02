@@ -1,0 +1,127 @@
+/* Fondo oscuro con gradiente y puntos azules */
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at 0 0, #2a3a7a 0%, #181a2a 40%, #181a2a 100%);
+  position: relative;
+  padding: 2rem;
+  gap: 2rem;
+  overflow: hidden; /* Evita que los elementos se muevan al escribir */
+}
+
+.title {
+  color: #fff;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-family: 'Oswald', Arial, sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  width: 600px;
+  max-width: 90vw;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.searchBox:hover {
+  box-shadow: 0 12px 32px rgba(42, 58, 122, 0.3);
+  transform: translateY(-2px);
+}
+
+.searchBox:focus-within {
+  box-shadow: 0 12px 32px rgba(42, 58, 122, 0.4);
+  transform: translateY(-2px);
+}
+
+.searchIcon {
+  margin-right: 0.5rem;
+  color: #2a3a7a;
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.arrowIcon {
+  margin-left: 0.5rem;
+  color: #2a3a7a;
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.select {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  padding: 0.5rem;
+  background: transparent;
+  color: #181a2a;
+  cursor: pointer;
+  font-family: 'Arial', sans-serif;
+  font-weight: 500;
+  max-height: 150px;  /* Limita la altura del select */
+  overflow-y: auto;  /* Agrega scroll si el contenido excede */
+}
+
+.select:hover {
+  color: #2a3a7a;
+}
+
+.select option {
+  padding: 0.75rem;
+  font-size: 1rem;
+  background: #fff;
+  color: #181a2a;
+}
+
+.select option:disabled {
+  color: #999;
+  font-style: italic;
+}
+
+.selectedInfo {
+  color: #fff;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+  }
+
+  .searchBox {
+    width: 95vw;
+    padding: 0.75rem 1rem;
+  }
+
+  .select {
+    font-size: 1rem;
+  }
+}
+
+
