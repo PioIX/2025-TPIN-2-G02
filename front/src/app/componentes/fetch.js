@@ -79,3 +79,23 @@ async function enviarMensaje(contenido, id_usuario, id_partida) {
   console.log("Mensaje enviado:", data);
   return data;
 }
+
+// 🔹 Obtener todas las salas
+async function getSalas() {
+  const res = await fetch("http://localhost:3000/salas");
+  const data = await res.json();
+  console.log("Salas:", data);
+  return data;
+}
+
+// 🔹 Crear una nueva sala
+async function crearSala(nombre_sala, id_usuario1, id_usuario2) {
+  const res = await fetch("http://localhost:3000/salas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre_sala, id_usuario1, id_usuario2 })
+  });
+  const data = await res.json();
+  console.log("Sala creada:", data);
+  return data;
+}
