@@ -284,6 +284,41 @@ app.post('/chatsUsuario', async (req, res) => {
   }
 });
 
+
+// ULTIMO POST:
+
+// ======================================
+// CREACIÓN DE SALAS
+// ======================================
+app.post("/salas", async (req, res) => {
+  const { nombre_sala, id_usuario1, id_usuario2 } = req.body;
+
+  // Verificar que los datos necesarios estén presentes
+  if (!nombre_sala || !id_usuario1 || !id_usuario2) {
+    return res.status(400).json({ ok: false, mensaje: "Faltan parámetros necesarios (nombre_sala, id_usuario1, id_usuario2)." });
+  }
+
+  try {
+    // Insertar la nueva sala en la base de datos
+    const result = await realizarQuery(
+      "INSERT INTO Salas (nombre_sala, cantidad_participantes, id_usuario1, id_usuario2) VALUES (?, ?, ?, ?)",
+      [nombre_sala, 2, id_usuario1, id_usuario2] // cantidad_participantes inicializada en 2
+    );
+
+    // Responder con los datos de la sala creada
+    res.json({
+      ok: true,
+      id_sala: result.insertId,
+      nombre_sala,
+      cantidad_participantes: 2, // Inicialmente son 2
+      id_usuario1,
+      id_usuario2
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ======================================
 // INICIO DEL SERVIDOR
 // ======================================
