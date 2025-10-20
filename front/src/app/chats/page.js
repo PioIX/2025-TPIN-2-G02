@@ -4,9 +4,9 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import Popup from "reactjs-popup";
+// Popup removido: no se usa porque quitamos el apartado NuevoChat
 import { io } from "socket.io-client";
-import Title from "@/app/componentes/Title/Title"
+import { useRouter } from 'next/navigation';
 import styles from "./chats.module.css"
 import { Poppins } from "next/font/google";
 
@@ -15,179 +15,7 @@ const poppins = Poppins({
   weight: ["400", "600", "700"],
 });
 
-// ==============================================
-// Componente: Botón y popup para crear nuevo chat
-// ==============================================
-function NuevoChatButton({ onCreate, idLoggued }) {
-  const [open, setOpen] = useState(false);
-  const [usuarios, setUsuarios] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [selected, setSelected] = useState([]); // IDs seleccionados
-  const [titulo, setTitulo] = useState("");
-
-  // Obtener todos los usuarios menos el logueado
-  const fetchUsuarios = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("http://localhost:4000/usuarioRegistro", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-      });
-      let data = await res.json();
-      if (Array.isArray(data)) {
-        data = data.filter(u => String(u.id_usuario) !== String(idLoggued));
-      }
-      setUsuarios(data);
-    } catch {
-      setError("Error al cargar usuarios");
-    }
-    setLoading(false);
-  };
-
-  const handleNuevoChatClick = () => {
-    setOpen(true);
-    setSelected([]);
-    setTitulo("");
-    fetchUsuarios();
-  };
-
-  const handleToggleUsuario = (id_usuario) => {
-    setSelected(prev =>
-      prev.includes(id_usuario)
-        ? prev.filter(id => id !== id_usuario)
-        : [...prev, id_usuario]
-    );
-  };
-
-  const handleCreate = async () => {
-    if (selected.length === 0) {
-      setError("Selecciona al menos un usuario");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    try {
-      // Participantes: el logueado (admin) + seleccionados
-      const participantes = [
-        { id_usuario: Number(idLoggued), es_admin: 1 },
-        ...selected.map(id => ({ id_usuario: id, es_admin: 0 }))
-      ];
-      await onCreate({
-        titulo: titulo || null,
-        es_grupo: selected.length > 1 ? 1 : 0,
-        participantes
-      });
-      setOpen(false);
-    } catch {
-      setError("Error al crear el chat");
-    }
-    setLoading(false);
-  };
-
-  return (
-    <>
-      <button
-        onClick={handleNuevoChatClick}
-        className={styles.nuevoChatButton + ' ' + poppins.className}
-        type="button"
-      >
-        Nuevo Oponente
-      </button>
-
-      <Popup
-        open={open}
-        onClose={() => setOpen(false)}
-        modal
-        nested
-        contentStyle={{
-          background: '#f3f3f3',
-          borderRadius: '16px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
-          padding: '40px 32px',
-          minWidth: '340px',
-          maxWidth: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}
-      >
-        <div className={styles.popupContent}>
-          <h2 className={styles.nuevoChatTitle}>Nuevo chat</h2>
-
-          <input
-            type="text"
-            placeholder="Título (opcional)"
-            value={titulo}
-            onChange={e => setTitulo(e.target.value)}
-            style={{
-              marginBottom: 12,
-              width: '100%',
-              padding: 8,
-              borderRadius: 8,
-              border: '1px solid #ccc'
-            }}
-          />
-
-          {loading && <div style={{ marginBottom: 12 }}>Cargando...</div>}
-          {error && <div className={styles.nuevoChatError}>{error}</div>}
-
-          <div
-            className={styles.usuariosList}
-            style={{ maxHeight: 200, overflowY: 'auto' }}
-          >
-            {usuarios.length > 0 ? (
-              usuarios.map(usuario => (
-                <div
-                  key={usuario.id_usuario}
-                  className={styles.usuarioItem}
-                  onClick={() => handleToggleUsuario(usuario.id_usuario)}
-                  style={{
-                    background: selected.includes(usuario.id_usuario)
-                      ? '#e0e0e0'
-                      : 'transparent'
-                  }}
-                >
-                  <img src={usuario.foto_url} />
-                  <div className={styles.usuarioInfo}>
-                    <span className={styles.usuarioNombre}>{usuario.nombre}</span>
-                    <span className={styles.usuarioEmail}>{usuario.email}</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(usuario.id_usuario)}
-                    readOnly
-                    style={{ marginLeft: 'auto' }}
-                  />
-                </div>
-              ))
-            ) : (
-              <div style={{ color: '#888' }}>No hay usuarios disponibles</div>
-            )}
-          </div>
-
-          <button
-            onClick={handleCreate}
-            style={{
-              marginTop: 18,
-              padding: "8px 20px",
-              borderRadius: 10,
-              background: "#222",
-              color: "#fff",
-              fontWeight: 600,
-              border: "none",
-              cursor: "pointer",
-              fontSize: 15
-            }}
-          >
-            Crear chat
-          </button>
-        </div>
-      </Popup>
-    </>
-  );
-}
+// NuevoChat eliminado por petición.
 
 // =====================================
 // Componente: Tarjeta de chat individual
@@ -210,6 +38,7 @@ function Chat({ nombre, description, foto_url }) {
 // Componente principal de Chats
 // ================================
 export default function Chats() {
+  const router = useRouter();
   const [chat, setChat] = useState([]);
   const [idLoggued, setIdLoggued] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Nuevo estado para el usuario logueado
@@ -257,11 +86,6 @@ export default function Chats() {
       }
     }
 
-    async function dataUserLoggued(){
-      const idLoggued = localStorage.getItem("idLoggued")
-      let reuslt = await fetch('http://localhost:4000/')
-    }
-
     async function fetchUsuarioLogueado(id_usuario) {
       try {
         const res = await fetch(`http://localhost:4000/usuarioRegistro?id_usuario=${id_usuario}`);
@@ -281,6 +105,7 @@ export default function Chats() {
       chatsperuser(id);
       fetchUsuarioLogueado(id);
     }
+
     // Obtener jugador seleccionado desde Home (localStorage)
     const idJugadorSeleccionado = localStorage.getItem('selectedJugador');
     if (idJugadorSeleccionado) {
@@ -422,54 +247,35 @@ export default function Chats() {
   // Renderizado principal
   return (
     <div className={styles.mainBgGradient}>
-      <div className={styles.whatsappContainer + " " + poppins.className}>
-        <div className={styles.sidebar}>
-          {/* Header eliminado del sidebar, solo queda el título */}
-          <div className={styles.title}>OPONENTES</div>
-          <NuevoChatButton onCreate={handleCreateChat} idLoggued={idLoggued} />
-          <div className={styles["chats-list"]}>
-            {chat.length > 0 ? (
-              chat.map(element => {
-                let contacto = null;
-                if (!element.es_grupo && element.participantes) {
-                  contacto = element.participantes.find(u => String(u.id_usuario) !== String(idLoggued));
-                }
-                return (
-                  <div
-                    key={element.id_chat}
-                    className={
-                      styles.chatListItem +
-                      (selectedChat && selectedChat.id_chat === element.id_chat ? " " + styles.selected : "")
-                    }
-                    onClick={() => handleSelectChat(element)}
-                  >
-                    <Chat
-                      nombre={contacto ? contacto.nombre : element.nombre}
-                      description={element.es_grupo ? "Grupo" : "Chat privado"}
-                      foto_url={
-                        !element.es_grupo
-                          ? (contacto ? contacto.foto_url : undefined)
-                          : element.foto_url
-                      }
-                    />
-                  </div>
-                );
-              })
-            ) : (
-              <div className={styles["no-chats"]}>Sin oponentes</div>
-            )}
-          </div>
-        </div>
+      {/* Botón grande X en la esquina superior derecha */}
+      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 30 }}>
+        <button
+          onClick={() => router.back()}
+          aria-label="Cerrar chat"
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 12,
+            background: '#fff',
+            border: 'none',
+            fontSize: 36,
+            fontWeight: 800,
+            color: '#222',
+            cursor: 'pointer',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.15)'
+          }}
+        >
+          ✕
+        </button>
       </div>
 
+      {/* Se elimina la columna blanca (sidebar) y la envoltura whatsappContainer */}
+
       <div className={styles.chatArea}>
-        {/* Header superior con oponente y mi jugador */}
+        {/* Header superior con 'MI JUGADOR:' y avatar del jugador seleccionado */}
         <div className={styles.topHeader}>
           <div className={styles.headerCol}>
-          </div>
-          <div className={styles.headerCol}>
-            <span className={styles.headerLabel}>Mi Jugador:</span>
-            {/* Mostrar imagen del jugador seleccionado (priorizar sobre usuarioLogueado) */}
+            <span className={styles.headerLabel}>MI JUGADOR:</span>
             {selectedJugador && selectedJugador.img_url ? (
               <img src={selectedJugador.img_url} alt="Mi Jugador" className={styles.avatar} />
             ) : usuarioLogueado && usuarioLogueado.foto_url ? (
@@ -479,6 +285,7 @@ export default function Chats() {
             )}
           </div>
         </div>
+
         {selectedChat ? (
           <div className={styles.chatContent}>
             <h2>
