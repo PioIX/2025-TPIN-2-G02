@@ -4,12 +4,14 @@ import React, { useState, useEffect } from "react";
 import Button from "../componentes/Button/Button";
 import Input from "../componentes/Input/input"; 
 import { useRouter } from "next/navigation";
+import { useSocket } from "@/hooks/useSocket";
 import styles from "@/app/jugador/jugador.module.css";
 
 export default function Home() {
   const [jugadores, setJugadores] = useState([]);
   const [selectedJugador, setSelectedJugador] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const { socket, isConnected } = useSocket();
   const router = useRouter();
 
   useEffect(() => {
