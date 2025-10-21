@@ -43,7 +43,8 @@ export default function socketPage() {
 
     function joinRoom() {
         if (isConnected) {
-            socket.emit("joinRoom", { room: "pio" });
+            const idLogged = localStorage.getItem("id_usuario")
+            socket.emit("joinRoom", { room: "pio", idLogged: idLogged});
             router.push("/jugador");
         } else {
             console.error("Socket no está conectado");

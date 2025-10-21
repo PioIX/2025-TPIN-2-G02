@@ -3,7 +3,9 @@
   left: 0;
   top: 0; /* el header llega hasta el borde superior */
   width: 100%; /* ocupar todo el ancho */
-  height: 72px;
+  height: 120px; /* aumentado para avatar grande */
+
+
   display: flex;
   flex-direction: row;
   justify-content: center; /* centrar contenido horizontalmente */
@@ -24,7 +26,20 @@
   text-transform: uppercase;
 }
 /* Header superior con oponente y mi jugador */
-/* bloque duplicado eliminado */
+.topHeader {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: calc(100vw - 340px); /* Resta el ancho del sidebar */
+  height: 120px; /* aumentado para avatar grande */
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 32px;
+  padding: 0 40px 0 0;
+  z-index: 20;
+}
 /* Header en la parte superior derecha del área de chat */
 .rightHeader {
   position: absolute;
@@ -69,14 +84,14 @@
 }
 
 .avatar {
-	width: 48px;
-	height: 48px;
-	border-radius: 50%;
-	object-fit: cover;
-	margin-right: 8px; /* menos margen para mantener el centrado */
-	border: 2px solid #222;
-	background: #eee;
-	box-shadow: 0 1px 4px 0 rgba(0,0,0,0.10);
+  width: 110px; /* agrandado */
+  height: 110px; /* agrandado */
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+  border: 3px solid #222;
+  background: #eee;
+  box-shadow: 0 4px 12px 0 rgba(0,0,0,0.12);
 }
 .chat-row {
 	display: flex;
@@ -250,28 +265,10 @@
 }
 
 .mensajeAvatar {
-  width: 36px;
-  height: 36px;
+  width: 64px; /* más grande para mensajes */
+  height: 64px;
   border-radius: 50%;
   object-fit: cover;
-.chatContent {
-  max-width: 700px;
-  width: 100%;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 32px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-}
-  background: #eee;
-  border: 1px solid #ccc;
 }
 
 .mensajeNombre {
