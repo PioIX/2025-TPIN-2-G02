@@ -12,64 +12,80 @@ app.use(express.json());
 app.use(cors());
 
 const server = app.listen(port, () => {
-	console.log(`Servidor NodeJS corriendo en http://localhost:${port}/`);
+  console.log(`Servidor NodeJS corriendo en http://localhost:${port}/`);
 });;
 
 const io = require('socket.io')(server, {
-	cors: {
-		// IMPORTANTE: REVISAR PUERTO DEL FRONTEND
-		origin: ["http://localhost:3000", "http://localhost:3001"], // Permitir el origen localhost:3000
-		methods: ["GET", "POST", "PUT", "DELETE"],  	// Métodos permitidos
-		credentials: true                           	// Habilitar el envío de cookies
-	}
+  cors: {
+    // IMPORTANTE: REVISAR PUERTO DEL FRONTEND
+    origin: ["http://localhost:3000", "http://localhost:3001"], // Permitir el origen localhost:3000
+    methods: ["GET", "POST", "PUT", "DELETE"],  	// Métodos permitidos
+    credentials: true                           	// Habilitar el envío de cookies
+  }
 });
 
 const sessionMiddleware = session({
-	//Elegir tu propia key secreta
-	secret: "supersarasa",
-	resave: false,
-	saveUninitialized: false
+  //Elegir tu propia key secreta
+  secret: "supersarasa",
+  resave: false,
+  saveUninitialized: false
 });
 
 app.use(sessionMiddleware);
 
 io.use((socket, next) => {
-	sessionMiddleware(socket.request, {}, next);
+  sessionMiddleware(socket.request, {}, next);
 });
 
 /*
-	A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
-	A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
-	A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
+  A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
+  A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
+  A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
 */
 
 io.on("connection", (socket) => {
-	const req = socket.request;
+  const req = socket.request;
 
-	socket.on('joinRoom', async data => {
-		console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
-		if (req.session.room != undefined)
-			socket.leave(req.session.room);
-		req.session.room = data.room;
-		socket.join(req.session.room);
-		io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
-    await realizarQuery(`INSERT INTO Salas (nombre_sala, id_usuario) VALUES
+  socket.on('joinRoom', async data => {
+    console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
+    if (req.session.room != undefined)
+      socket.leave(req.session.room);
+    req.session.room = data.room;
+
+    if (maxPlayers > 2) {
+
+      // Investigar donde guardar maxPlayers
+      // Investigar si debo hacer socket.join y enviar el emit o directamente el emit
+      // Investigar si hacer el leave luego del emit
+      socket.join(req.session.room);
+      io.to(req.session.room).emit('maxPlayersReached', { user: req.session.user, room: req.session.room, message: "Se ha completado el maximo de jugadores" });
+      // aca iria el leave
+
+    } else {
+
+      socket.join(req.session.room);
+      io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
+      await realizarQuery(`INSERT INTO Salas (nombre_sala, id_usuario) VALUES
       (${data.room}, ${data.idLoggued})`)
-	});
 
-	socket.on('pingAll', data => {
-		console.log("PING ALL: ", data);
-		io.emit('pingAll', { event: "Ping to all", message: data });
-	});
 
-	// Evento para enviar mensajes y emitirlos correctamente a la sala
-	socket.on('sendMessage', data => {
-		io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
-	});
+    }
 
-	socket.on('disconnect', () => {
-		console.log("Disconnect");
-	})
+  });
+
+  socket.on('pingAll', data => {
+    console.log("PING ALL: ", data);
+    io.emit('pingAll', { event: "Ping to all", message: data });
+  });
+
+  // Evento para enviar mensajes y emitirlos correctamente a la sala
+  socket.on('sendMessage', data => {
+    io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
+  });
+
+  socket.on('disconnect', () => {
+    console.log("Disconnect");
+  })
 });
 
 // ======================================
@@ -147,7 +163,7 @@ app.get("/usuarios", async (req, res) => {
 app.get("/jugadores", async (req, res) => {
   try {
     const players = await realizarQuery("SELECT * FROM Jugadores");
-    res.send({players});
+    res.send({ players });
   } catch (err) {
     res.send(err.message)
   }

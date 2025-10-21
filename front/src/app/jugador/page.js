@@ -37,7 +37,7 @@ export default function Home() {
 
 
     function handleJugar(){
-          // Guardar la selección en localStorage para que otras páginas (ej. chats) la puedan leer
+          // Guardar en localStorage 
           if (selectedJugador) {
             localStorage.setItem('selectedJugador', selectedJugador);
           } else {
