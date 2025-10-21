@@ -1,0 +1,127 @@
+.hero {
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #0b1030 0%, #1b1b3a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.headerBar {
+  width: 100%;
+  background: #0f1430;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 28px 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+.headerContent {
+  max-width: 1200px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.title {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin: 0;
+  color: #ffffff;
+}
+
+.centerArea {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.subtitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.controls {
+  width: 100%;
+  max-width: 1200px;
+  padding: 28px 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.controlLeft, .controlRight {
+  display: flex;
+  align-items: center;
+}
+
+.controlLeft button, .controlRight button {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+/* New styles to match the reference image exactly */
+.wingsLeft {
+  position: absolute;
+  left: -20px;
+  top: 24px;
+  width: 260px;
+  transform: rotate(0deg);
+  z-index: 2;
+}
+
+.wingsRight {
+  position: absolute;
+  right: -20px;
+  top: 24px;
+  width: 260px;
+  transform: scaleX(-1);
+  z-index: 2;
+}
+
+.heroImage {
+  max-width: 520px;
+  width: 38%;
+  height: auto;
+  object-fit: contain;
+  position: absolute;
+  right: 12%;
+  top: 18%;
+  z-index: 1;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
+}
+
+.centerText {
+  z-index: 3;
+  position: relative;
+}
+
+/* Button visual adjustments to match reference */
+.controlLeft button, .controlRight button {
+  background: #ffffff;
+  color: #0b1030;
+  border: none;
+  padding: 16px 36px;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+/* Layout tweaks for smaller screens */
+@media (max-width: 768px) {
+  .title { font-size: 36px; }
+  .heroImage { width: 46%; right: 6%; top: 22%; }
+  .wingsLeft, .wingsRight { width: 160px; }
+  .controls { padding: 18px; }
+}
