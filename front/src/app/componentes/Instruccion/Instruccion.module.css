@@ -1,0 +1,95 @@
+.fondoInstruccion {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at left top, #2b2b4b 0%, #18182a 100%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contenedor {
+  position: relative;
+  background: rgba(24, 24, 42, 0.98);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  padding: 38px 60px 32px 60px;
+  max-width: 1100px;
+  width: 98vw;
+  color: #fff;
+  font-size: 1.25rem;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  line-height: 1.7;
+  border: 2px solid #3a3a5a;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 1vw;
+}
+
+.cruz {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: #23234a;
+  border: none;
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: background 0.2s, color 0.2s;
+  z-index: 10;
+}
+.cruz:hover {
+  background: #ff4b4b;
+  color: #fff;
+}
+
+.texto {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.texto p {
+  margin-bottom: 0.7em;
+  text-align: center;
+  font-size: 1.25rem;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.texto p:first-child {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #ffb6c1;
+  margin-bottom: 1.2em;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 1200px) {
+  .contenedor {
+    max-width: 98vw;
+    padding: 18px 2vw 18px 2vw;
+    font-size: 1.05rem;
+    min-height: 40vh;
+  }
+  .cruz {
+    top: 8px;
+    right: 8px;
+    font-size: 1.5rem;
+    width: 36px;
+    height: 36px;
+  }
+}
