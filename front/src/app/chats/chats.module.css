@@ -1,10 +1,11 @@
 .topHeader {
   position: absolute;
-  top: 0;
   left: 0;
-  right: 0;
+  top: 0; /* el header llega hasta el borde superior */
   width: 100%; /* ocupar todo el ancho */
   height: 120px; /* aumentado para avatar grande */
+
+
   display: flex;
   flex-direction: row;
   justify-content: center; /* centrar contenido horizontalmente */
@@ -75,9 +76,11 @@
 .mainBgGradient {
   min-height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #000000, #434343);  display: flex;
+  background: linear-gradient(135deg, #000000, #434343);
+  display: flex;
   align-items: stretch;
   justify-content: stretch;
+  padding-top: 0;
 }
 
 .avatar {
