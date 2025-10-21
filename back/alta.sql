@@ -44,10 +44,8 @@ CREATE TABLE Salas (
     id_sala INT PRIMARY KEY AUTO_INCREMENT,
     nombre_sala VARCHAR(100) NOT NULL,
     cantidad_participantes INT DEFAULT 0,
-    id_usuario1 INT,
-    id_usuario2 INT,
-    FOREIGN KEY (id_usuario1) REFERENCES Usuario(id_usuario),
-    FOREIGN KEY (id_usuario2) REFERENCES Usuario(id_usuario)
+    id_usuario INT,
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
 );
 
 -- 2. Insertar usuarios
