@@ -18,7 +18,7 @@ export default function Chats() {
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [selectedJugador, setSelectedJugador] = useState(null);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const id = localStorage.getItem("idLoggued");
     setIdLoggued(id);
 
@@ -49,7 +49,7 @@ export default function Chats() {
       const data = await res.json();
       if (data && data.id_jugador) setSelectedJugador(data);
     } catch { }
-  }
+  }*/
 
   function handleVolver() {
     router.push("/jugador");

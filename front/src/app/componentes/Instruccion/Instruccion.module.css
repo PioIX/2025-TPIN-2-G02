@@ -7,8 +7,9 @@
   background: radial-gradient(circle at left top, #2b2b4b 0%, #18182a 100%);
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding: 4vh 0; /* give some top/bottom space on tall screens */
 }
 
 .contenedor {
@@ -18,24 +19,23 @@
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   padding: 38px 60px 32px 60px;
   max-width: 1100px;
-  width: 98vw;
+  width: min(1100px, 96vw);
   color: #fff;
   font-size: 1.25rem;
   font-family: inherit;
   letter-spacing: 0.01em;
-  line-height: 1.7;
+  line-height: 1.6;
   border: 2px solid #3a3a5a;
-  min-height: 60vh;
+  max-height: 92vh; /* keep modal inside viewport */
   display: flex;
   flex-direction: column;
-  justify-content: center;
   margin: 0 1vw;
 }
 
 .cruz {
   position: absolute;
-  top: 18px;
-  right: 18px;
+  top: 12px;
+  right: 12px;
   background: #23234a;
   border: none;
   color: #fff;
@@ -58,38 +58,46 @@
 }
 
 .texto {
-  margin-top: 10px;
+  margin-top: 6px;
   width: 100%;
+  overflow: auto; /* enable scrolling when content is too tall */
+  padding-right: 8px; /* avoid hiding scrollbar over content */
 }
 
 .texto p {
-  margin-bottom: 0.7em;
-  text-align: center;
-  font-size: 1.25rem;
+  margin-bottom: 0.85em;
+  text-align: left;
+  font-size: 1.05rem;
   word-break: break-word;
   max-width: 100%;
+  white-space: pre-wrap;
 }
 
 .texto p:first-child {
-  font-size: 1.4rem;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #ffb6c1;
-  margin-bottom: 1.2em;
-  letter-spacing: 0.04em;
+  margin-bottom: 0.9em;
+  letter-spacing: 0.02em;
 }
 
 @media (max-width: 1200px) {
   .contenedor {
-    max-width: 98vw;
-    padding: 18px 2vw 18px 2vw;
-    font-size: 1.05rem;
-    min-height: 40vh;
+    max-width: 96vw;
+    padding: 14px 4vw 14px 4vw;
+    font-size: 0.98rem;
+    max-height: 90vh;
   }
   .cruz {
     top: 8px;
     right: 8px;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     width: 36px;
     height: 36px;
   }
+}
+
+/* small tweak to ensure the popup content doesn't overflow body margins */
+.fondoInstruccion, .contenedor, .texto {
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
 }

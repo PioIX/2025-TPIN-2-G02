@@ -2,11 +2,9 @@
   position: absolute;
   left: 0;
   top: 0; /* el header llega hasta el borde superior */
-  width: 100%; /* ocupar todo el ancho */
+  width: 100px; /* ocupar todo el ancho */
   height: 120px; /* aumentado para avatar grande */
-
-
-  display: flex;
+   display: flex;
   flex-direction: row;
   justify-content: center; /* centrar contenido horizontalmente */
   align-items: center; /* centrar contenido verticalmente */
