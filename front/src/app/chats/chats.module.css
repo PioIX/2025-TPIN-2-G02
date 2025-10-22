@@ -1,42 +1,108 @@
+/* Header principal: ocupar toda la parte superior en blanco */
 .topHeader {
-  position: absolute;
+  --header-height: 100px;
+  position: fixed; /* fijo para que no se corte al hacer scroll */
   left: 0;
   top: 0; /* el header llega hasta el borde superior */
-  width: 100px; /* ocupar todo el ancho */
-  height: 120px; /* aumentado para avatar grande */
-   display: flex;
-  flex-direction: row;
-  justify-content: center; /* centrar contenido horizontalmente */
-  align-items: center; /* centrar contenido verticalmente */
+  right: 0; /* ocupar todo el ancho */
+  height: var(--header-height); /* aumentar para que coincida con el avatar */
+  display: flex;
+  align-items: center; /* centrar verticalmente */
+  justify-content: space-between; /* label a la izquierda, avatar a la derecha */
   gap: 16px;
-  padding: 0 20px; /* pequeño padding lateral */
-  z-index: 20;
+  padding-left: 20px; /* padding izquierdo fijo */
+  padding-right: clamp(28px, 8vw, 140px); /* espacio dinámico a la derecha para avatar/botón */
+  z-index: 40;
   background: #fff;
   border-radius: 0;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
 }
+
 .topHeader .headerLabel {
-  font-size: 25px;
-  font-weight: 800;
-  color: #222;
+  font-size: 50px; /* muy grande, similar a la altura del avatar */
+  line-height: 1;
+  font-weight: 900;
+  color: #111;
   font-family: 'Poppins', Arial, sans-serif;
-  letter-spacing: 2px;
+  letter-spacing: 4px;
   text-transform: uppercase;
+  margin-left: 8px; /* pegado al borde izquierdo */
+  white-space: nowrap; /* forzar en una sola linea */
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding-left: 12px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  /* asegurar que el boton quede más a la derecha: espacio derecho dinámico */
+  padding-right: clamp(20px, 6vw, 40px);
+}
+
+/* Botón Volver: posicionamiento responsivo para que no se superponga al texto al hacer zoom */
+.volverButton {
+  position: relative; /* en flujo dentro del headerRight */
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px; /* separación respecto a elementos previos */
+  margin-right: 6px; /* pequeño espacio respecto al borde */
+}
+
+.volverButton button {
+  /* Aumentar tamaño por defecto y estilo coherente con UI */
+  padding: 12px 18px;
+  font-size: 1rem; /* un poco mas pequeño */
+  border-radius: 10px;
+  min-width: 96px;
+  font-family: 'Poppins', Arial, sans-serif; /* misma tipografía */
+  font-weight: 900; /* mismo peso */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: #111;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  cursor: pointer;
+}
+.volverButton button:hover {
+  background: #222;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .topHeader { --header-height: 110px; }
+  .topHeader .headerLabel { font-size: 36px; }
+  .volverButton { top: calc((var(--header-height) - 40px) / 2); right: 12px; }
+  .volverButton button { padding: 14px 18px; font-size: 1.05rem; min-width: 92px; }
+
+  .headerCenter { left: 50%; transform: translateX(-50%); }
+  .centerLabel { font-size: 30px; }
+  .centerImage { width: 48px; height: 48px; }
+}
+
+@media (max-width: 420px) {
+  .topHeader { --header-height: 90px; }
+  .topHeader .headerLabel { font-size: 28px; }
+  .volverButton { top: calc((var(--header-height) - 36px) / 2); right: 10px; }
+  .volverButton button { padding: 12px 16px; font-size: 0.95rem; min-width: 76px; }
+
+  .headerCenter { left: 50%; transform: translateX(-50%); }
+  .centerLabel { font-size: 22px; }
+  .centerImage { width: 36px; height: 36px; }
 }
 /* Header superior con oponente y mi jugador */
-.topHeader {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: calc(100vw - 340px); /* Resta el ancho del sidebar */
-  height: 120px; /* aumentado para avatar grande */
+.topHeader .headerCol {
   display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
   align-items: center;
-  gap: 32px;
-  padding: 0 40px 0 0;
-  z-index: 20;
+  gap: 12px;
+  margin-right: 12px; /* espacio a la derecha para el avatar */
 }
 /* Header en la parte superior derecha del área de chat */
 .rightHeader {
@@ -58,12 +124,11 @@
   padding: 16px 24px 0 24px;
   gap: 24px;
 }
-.headerCol {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center; /* centro interno */
-  gap: 12px;
+.headerLabel {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin-right: 8px;
 }
 .headerLabel {
   font-size: 1.1rem;
@@ -74,7 +139,7 @@
 .mainBgGradient {
   min-height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #000000, #434343);
+  background: radial-gradient(circle at 0 0, #2a3a7a 0%, #181a2a 40%, #181a2a 100%);
   display: flex;
   align-items: stretch;
   justify-content: stretch;
@@ -82,8 +147,8 @@
 }
 
 .avatar {
-  width: 110px; /* agrandado */
-  height: 110px; /* agrandado */
+  width: 90px; /* reducido un poco */
+  height: 90px; /* reducido un poco */
   border-radius: 50%;
   object-fit: cover;
   margin-right: 12px;
@@ -227,31 +292,25 @@
 
 /* Caja de chat centrada */
 .chatContent {
-  max-width: 700px;
+  width: calc(100vw - 120px); /* ocupar el area grande marcada */
+  height: calc(100vh - 200px);
+  max-width: 1200px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 32px 24px;
-
-  /* Para centrar en toda la pantalla */
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-15%, -50%);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  padding: 24px;
+  position: relative;
+  margin: calc(var(--header-height,140px) + 20px) 60px 40px 60px; /* separar del header usando su altura */
 }
 
 
 
 .chatMessages {
-  min-height: 300px;
-  margin-top: 24px;
-  background: #f7f7f7;
-  border-radius: 12px;
-  padding: 24px;
-  min-height: 300px;
-  margin-top: 18px;
-  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.07);
-  color: #222;
+  height: calc(100% - 110px);
+  overflow-y: auto;
+  background: transparent;
+  padding: 12px;
+  color: #111;
   font-family: 'Poppins', Arial, sans-serif;
 }
 
@@ -262,16 +321,23 @@
   margin-bottom: 18px;
 }
 
-.mensajeAvatar {
-  width: 64px; /* más grande para mensajes */
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
+.mensajeBubble {
+  background: #000; /* burbuja negra */
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: 12px;
+  max-width: 80%;
 }
 
-.mensajeNombre {
-  color: #111;
-  font-weight: bold;
+.mensajeTexto {
+  white-space: pre-wrap;
+}
+
+.mensajeFecha {
+  font-size: 0.75rem;
+  color: #bdbdbd !important; /* hora en gris */
+  margin-top: 6px;
+  text-align: right;
 }
 
 .mensajeFecha {
@@ -284,6 +350,33 @@
   color: #888;
   text-align: center;
   margin-top: 120px;
+}
+
+.chatInputContainer {
+  position: absolute;
+  bottom: 20px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.chatInput {
+  flex: 1;
+  min-height: 56px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 2px solid #000; /* borde negro */
+}
+
+.sendButton {
+  background: #111;
+  color: #fff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 /* Estilo para el popup de nuevo chat tipo WhatsApp Web */
