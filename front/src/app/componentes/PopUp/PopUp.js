@@ -6,9 +6,8 @@ function Popup({ showPopup, closePopup, children }) {
   }
 
   return (
-    <div  onClick={closePopup}> {/* Click outside to close */}
-      <div  onClick={(e) => e.stopPropagation()}> {/* Prevent closing when clicking inside */}
-        <button  onClick={closePopup}>X</button>
+    <div onClick={closePopup} aria-hidden={!showPopup}>
+      <div onClick={(e) => e.stopPropagation()}>
         {children} {/* Content of the popup */}
       </div>
     </div>
