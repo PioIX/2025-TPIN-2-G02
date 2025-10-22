@@ -17,6 +17,7 @@ export default function Chats() {
   const [idLoggued, setIdLoggued] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [selectedJugador, setSelectedJugador] = useState(null);
+  const [cantidadUsers, setCantidadUsers] = useState(0);
 
   /*useEffect(() => {
     const id = localStorage.getItem("idLoggued");
@@ -51,9 +52,23 @@ export default function Chats() {
     } catch { }
   }*/
 
+  useEffect(() => {
+    async function getCantidadUsers() {
+      if (room) { // Solo hacer el fetch si el nombre de la sala está definido
+        let result = await fetch(`http://localhost:4000/cantidadDeUsersPorSala?room=${room}`);
+        let response = await result.json(); // Convertir la respuesta a JSON
+        setCantidadUsers(response.cantidadUsers); // Actualizar el estado con la cantidad de usuarios
+      }
+    }
+
+    getCantidadUsers();
+  }, [room]);
+
   function handleVolver() {
     router.push("/jugador");
   }
+
+
 
   return (
     <div className={styles.mainBgGradient}>

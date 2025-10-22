@@ -46,51 +46,62 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   const req = socket.request;
 
-  socket.on('joinRoom', async data => {
-    console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
-    if (req.session.room != undefined)
+  socket.on('joinRoom', async (data) => {
+    console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
+
+    // Si el usuario ya está en una sala, lo sacamos de la sala anterior
+    if (req.session.room != undefined) {
       socket.leave(req.session.room);
-    req.session.room = data.room;
-
-    if (maxPlayers > 2) {
-
-      // Investigar donde guardar maxPlayers
-      // Investigar si debo hacer socket.join y enviar el emit o directamente el emit
-      // Investigar si hacer el leave luego del emit
-      socket.join(req.session.room);
-      io.to(req.session.room).emit('maxPlayersReached', { user: req.session.user, room: req.session.room, message: "Se ha completado el maximo de jugadores" });
-      // aca iria el leave
-
-    } else {
-
-      socket.join(req.session.room);
-      io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
-      await realizarQuery(`INSERT INTO Salas (nombre_sala, id_usuario) VALUES
-      (${data.room}, ${data.idLoggued})`)
-
-
     }
 
+    req.session.room = data.room; // Asignamos la nueva sala
+
+    // Consultar la cantidad de usuarios en la sala
+    const contar = await realizarQuery(`SELECT * FROM Salas WHERE nombre_sala = '${data.room}'`);
+    const cantidadUsuarios = contar.length;
+
+    if (cantidadUsuarios >= 2) {
+      // Si ya hay 2 usuarios, no dejar unirse y emitir un mensaje
+      socket.emit('maxPlayersReached', { message: "Se ha alcanzado el máximo de jugadores en esta sala." });
+    } else {
+      // Si hay menos de 2 jugadores, permitir unirse a la sala
+      socket.join(req.session.room); // Unir al usuario a la sala
+
+      // Registrar al usuario en la base de datos
+      await realizarQuery(`INSERT INTO Salas (nombre_sala, id_usuario) VALUES ('${data.room}', ${data.idLoggued})`);
+
+      // Emitir mensajes a la sala (por ejemplo, mensajes de bienvenida)
+      io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
+
+      // Informar a los demás jugadores que un nuevo usuario se unió a la sala
+      io.to(req.session.room).emit('userJoined', { user: req.session.user, message: "Un nuevo jugador se ha unido a la sala." });
+    }
   });
 
-  socket.on('pingAll', data => {
+  // Evento para enviar mensajes a la sala
+  socket.on('sendMessage', (data) => {
+    io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
+  });
+
+  // Evento para realizar un ping a todos los clientes
+  socket.on('pingAll', (data) => {
     console.log("PING ALL: ", data);
     io.emit('pingAll', { event: "Ping to all", message: data });
   });
 
-  // Evento para enviar mensajes y emitirlos correctamente a la sala
-  socket.on('sendMessage', data => {
-    io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
-  });
-
+  // Evento de desconexión
   socket.on('disconnect', () => {
     console.log("Disconnect");
-  })
+  });
 });
 
-app.get("/cantidadDeUsersPorSala",async (req, res) => {
+
+// ========================================
+//
+// ========================================
+app.get("/cantidadDeUsersPorSala", async (req, res) => {
   let contar = await realizarQuery(`SELECT * FROM Salas WHERE nombre_sala = '${req.query.room}')`)
-  res.send({cantidadUsers: contar.length});
+  res.send({ cantidadUsers: contar.length });
 })
 
 // ======================================

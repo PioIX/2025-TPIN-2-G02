@@ -1,5 +1,3 @@
-// Página de login
-// Incluye: hooks, fetch, validación, manejo de estado y redirección
 "use client";
 
 import { useState } from "react";
