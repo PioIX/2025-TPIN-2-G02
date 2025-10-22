@@ -88,6 +88,11 @@ io.on("connection", (socket) => {
   })
 });
 
+app.get("/cantidadDeUsersPorSala",async (req, res) => {
+  let contar = await realizarQuery(`SELECT * FROM Salas WHERE nombre_sala = '${req.query.room}')`)
+  res.send({cantidadUsers: contar.length});
+})
+
 // ======================================
 // LOGIN Y REGISTRO
 // ======================================
