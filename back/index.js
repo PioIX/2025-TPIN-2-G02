@@ -49,47 +49,49 @@ io.on("connection", (socket) => {
   socket.on('joinRoom', async (data) => {
     console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
 
-    // Si el usuario ya está en una sala, lo sacamos de la sala anterior
     if (req.session.room != undefined) {
       socket.leave(req.session.room);
     }
 
-    req.session.room = data.room; // Asignamos la nueva sala
-
-    // Consultar la cantidad de usuarios en la sala
-    const contar = await realizarQuery(`SELECT * FROM Salas WHERE nombre_sala = '${data.room}'`);
+    req.session.room = data.room;
+    const contar = await realizarQuery(`
+    SELECT us.id_usuario
+    FROM UsuariosPorSala us
+    JOIN Salas s ON us.id_sala = s.id_sala
+    WHERE s.nombre_sala = '${data.room}'
+  `);
     const cantidadUsuarios = contar.length;
 
     if (cantidadUsuarios >= 2) {
-      // Si ya hay 2 usuarios, no dejar unirse y emitir un mensaje
       socket.emit('maxPlayersReached', { message: "Se ha alcanzado el máximo de jugadores en esta sala." });
     } else {
-      // Si hay menos de 2 jugadores, permitir unirse a la sala
-      socket.join(req.session.room); // Unir al usuario a la sala
+      await realizarQuery(`
+      INSERT INTO UsuariosPorSala (id_usuario, id_sala) 
+      SELECT ${data.idLoggued}, s.id_sala 
+      FROM Salas s 
+      WHERE s.nombre_sala = '${data.room}'
+    `);
 
-      // Registrar al usuario en la base de datos
-      await realizarQuery(`INSERT INTO Salas (nombre_sala, id_usuario) VALUES ('${data.room}', ${data.idLoggued})`);
+      await realizarQuery(`
+      UPDATE Salas 
+      SET cantidad_participantes = cantidad_participantes + 1 
+      WHERE nombre_sala = '${data.room}'
+    `);
 
-      // Emitir mensajes a la sala (por ejemplo, mensajes de bienvenida)
+      socket.join(req.session.room);
       io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
-
-      // Informar a los demás jugadores que un nuevo usuario se unió a la sala
       io.to(req.session.room).emit('userJoined', { user: req.session.user, message: "Un nuevo jugador se ha unido a la sala." });
     }
   });
 
-  // Evento para enviar mensajes a la sala
+
   socket.on('sendMessage', (data) => {
     io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
   });
-
-  // Evento para realizar un ping a todos los clientes
   socket.on('pingAll', (data) => {
     console.log("PING ALL: ", data);
     io.emit('pingAll', { event: "Ping to all", message: data });
   });
-
-  // Evento de desconexión
   socket.on('disconnect', () => {
     console.log("Disconnect");
   });
@@ -100,9 +102,9 @@ io.on("connection", (socket) => {
 //
 // ========================================
 app.get("/cantidadDeUsersPorSala", async (req, res) => {
-  let contar = await realizarQuery(`SELECT * FROM Salas WHERE nombre_sala = '${req.query.room}')`)
+  let contar = await realizarQuery(`SELECT * FROM UsuariosPorSala WHERE id_sala = (SELECT id_sala FROM Salas WHERE nombre_sala = '${req.query.room}')`);
   res.send({ cantidadUsers: contar.length });
-})
+});
 
 // ======================================
 // LOGIN Y REGISTRO
@@ -324,18 +326,17 @@ app.post('/chatsUsuario', async (req, res) => {
 // CREACIÓN DE SALAS
 // ======================================
 app.post("/salas", async (req, res) => {
-  const { nombre_sala, id_usuario1, id_usuario2 } = req.body;
+  const { nombre_sala } = req.body;
 
-  // Verificar que los datos necesarios estén presentes
-  if (!nombre_sala || !id_usuario1 || !id_usuario2) {
-    return res.status(400).json({ ok: false, mensaje: "Faltan parámetros necesarios (nombre_sala, id_usuario1, id_usuario2)." });
+  if (!nombre_sala) {
+    return res.status(400).json({ ok: false, mensaje: "Falta el nombre de la sala." });
   }
 
   try {
-    // Insertar la nueva sala en la base de datos
+    // Insertar la nueva sala sin usuarios
     const result = await realizarQuery(
-      "INSERT INTO Salas (nombre_sala, cantidad_participantes, id_usuario1, id_usuario2) VALUES (?, ?, ?, ?)",
-      [nombre_sala, 2, id_usuario1, id_usuario2] // cantidad_participantes inicializada en 2
+      "INSERT INTO Salas (nombre_sala, cantidad_participantes) VALUES (?, ?)",
+      [nombre_sala, 0] // Inicia con 0 participantes
     );
 
     // Responder con los datos de la sala creada
@@ -343,14 +344,13 @@ app.post("/salas", async (req, res) => {
       ok: true,
       id_sala: result.insertId,
       nombre_sala,
-      cantidad_participantes: 2, // Inicialmente son 2
-      id_usuario1,
-      id_usuario2
+      cantidad_participantes: 0, // Inicialmente vacío
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
+
 
 // ======================================
 // INICIO DEL SERVIDOR
