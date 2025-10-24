@@ -13,6 +13,7 @@ export default function Chats() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const idJugadorSeleccionado = searchParams.get("jugador");
+  const room = searchParams.get("room");
   const { socket, isConnected } = useSocket({ serverUrl: SOCKET_URL_LOCAL });
   const [idLoggued, setIdLoggued] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
