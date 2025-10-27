@@ -21,7 +21,7 @@ export default function Inicio() {
   const handleCloseInstrucciones = () => setShowInstrucciones(false);
 
   function handleEntrar() {
-    router.push("/jugador");
+    router.push("/home");
   }
 
   return (

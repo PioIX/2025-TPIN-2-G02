@@ -18,7 +18,7 @@ const server = app.listen(port, () => {
 const io = require('socket.io')(server, {
   cors: {
     // IMPORTANTE: REVISAR PUERTO DEL FRONTEND
-    origin: ["http://localhost:3000", "http://localhost:3001"], // Permitir el origen localhost:3000
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"], // Permitir el origen localhost:3000
     methods: ["GET", "POST", "PUT", "DELETE"],  	// Métodos permitidos
     credentials: true                           	// Habilitar el envío de cookies
   }
@@ -55,32 +55,41 @@ io.on("connection", (socket) => {
 
     req.session.room = data.room;
     const contar = await realizarQuery(`
-    SELECT us.id_usuario
-    FROM UsuariosPorSala us
-    JOIN Salas s ON us.id_sala = s.id_sala
-    WHERE s.nombre_sala = '${data.room}'
-  `);
+    SELECT UsuariosPorSala.id_usuario
+    FROM UsuariosPorSala
+    INNER JOIN Salas ON UsuariosPorSala.id_sala = Salas.id_sala
+    WHERE Salas.nombre_sala = '${data.room}';
+      `);
     const cantidadUsuarios = contar.length;
 
     if (cantidadUsuarios >= 2) {
+      console.log('maxPlayersReached')
       socket.emit('maxPlayersReached', { message: "Se ha alcanzado el máximo de jugadores en esta sala." });
     } else {
+      let id_sala = await realizarQuery(`SELECT Salas.id_sala
+  FROM Salas
+  WHERE Salas.nombre_sala = '${data.room}';`)
+  console.log(`SELECT Salas.id_sala
+  FROM Salas
+  WHERE Salas.nombre_sala = '${data.room}';`)
+  if (id_sala.length == 0) {
+      console.log("No existe la sala")
+  } else {
+    
+    await realizarQuery(`
+      INSERT INTO UsuariosPorSala (id_usuario, id_sala) VALUES (${data.idLogged}, ${id_sala[0].id_sala})
+      `);
+      
       await realizarQuery(`
-      INSERT INTO UsuariosPorSala (id_usuario, id_sala) 
-      SELECT ${data.idLoggued}, s.id_sala 
-      FROM Salas s 
-      WHERE s.nombre_sala = '${data.room}'
-    `);
-
-      await realizarQuery(`
-      UPDATE Salas 
-      SET cantidad_participantes = cantidad_participantes + 1 
-      WHERE nombre_sala = '${data.room}'
-    `);
-
-      socket.join(req.session.room);
-      io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
-      io.to(req.session.room).emit('userJoined', { user: req.session.user, message: "Un nuevo jugador se ha unido a la sala." });
+        UPDATE Salas
+        SET Salas.cantidad_participantes = Salas.cantidad_participantes + 1
+        WHERE Salas.nombre_sala = '${data.room}';
+        `);
+        
+        socket.join(req.session.room);
+        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
+        io.to(req.session.room).emit('userJoined', { user: req.session.user, message: "Un nuevo jugador se ha unido a la sala." });
+      }
     }
   });
 

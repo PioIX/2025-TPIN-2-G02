@@ -23,8 +23,14 @@ export default function socketPage() {
             console.log("MENSAJE NUEVO: ", data);
         };
 
+        const handleUserJoined = (data) => {
+            console.log("Usuario unido: ", data)
+            router.push("/jugador");
+        }
+
         socket.on("pingAll", handlePingAll);
         socket.on("newMessage", handleNewMessage);
+        socket.on('userJoined')
 
         return () => {
             // Limpieza de eventos al desmontar el componente
@@ -44,8 +50,7 @@ export default function socketPage() {
     function joinRoom() {
         if (isConnected) {
             const idLogged = localStorage.getItem("id_usuario")
-            socket.emit("joinRoom", { room: "pio", idLogged: idLogged});
-            router.push("/jugador");
+            socket.emit("joinRoom", { room: "Sala_1", idLogged: idLogged});
         } else {
             console.error("Socket no está conectado");
         }

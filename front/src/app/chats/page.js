@@ -66,7 +66,11 @@ export default function Chats() {
   }, [room]);
 
   function handleVolver() {
-    router.push("/jugador");
+    if (isConnected) {
+      socket.emit("leaveRoom", /* Pasarle el room y el jugador */)
+      router.push("/jugador");
+    }
+    //Aramr  leaveRoom en el back -> Sacar al jugador de la bdd
   }
 
 
