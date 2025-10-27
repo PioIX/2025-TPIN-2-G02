@@ -450,3 +450,144 @@
   background: #444;
   transform: scale(1.04);
 }
+
+.volverBtnContainer {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 30;
+}
+
+.chatContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  margin-top: 100px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 350px;
+}
+
+.messagesArea {
+  width: 100%;
+  min-height: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.noMessages {
+  color: #888;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.myMessageRow {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+}
+.otherMessageRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.myMessage {
+  background: #e0f7fa;
+  border-radius: 16px;
+  padding: 18px 32px;
+  max-width: 70%;
+  word-break: break-word;
+  font-size: 1.35rem;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.myMessage .messageTime {
+  font-size: 1.1rem;
+  color: #444;
+  margin-top: 8px;
+  text-align: right;
+}
+
+.otherMessage {
+  background: #eee;
+  border-radius: 12px;
+  padding: 12px 20px;
+  max-width: 70%;
+  word-break: break-word;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.otherMessage .messageTime {
+  font-size: 0.95rem;
+  color: #888;
+  margin-top: 6px;
+  text-align: left;
+}
+
+.inputWrapper {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  margin-top: auto;
+}
+.chatInput {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #d1d7db;
+  font-size: 1rem;
+}
+.sendButton {
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 18px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.sendButton:hover {
+  background: #444;
+}
+@media (max-width: 900px) {
+  .chatContainer {
+    max-width: 98vw;
+    margin-top: 60px;
+    padding: 16px;
+    min-height: 400px;
+  }
+  .myMessage {
+    font-size: 1.1rem;
+    padding: 12px 10px;
+  }
+}
+@media (max-width: 600px) {
+  .chatContainer {
+    max-width: 98vw;
+    margin-top: 80px;
+    padding: 10px;
+  }
+  .messagesArea {
+    max-height: 180px;
+  }
+}
