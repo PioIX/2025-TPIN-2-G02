@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
 import Button from "@/app/componentes/Button/Button";
@@ -19,39 +19,34 @@ export default function Chats() {
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [selectedJugador, setSelectedJugador] = useState(null);
   const [cantidadUsers, setCantidadUsers] = useState(0);
+  const [chat, setChats] = useState([]);
+  const [sendMessage, setSendMessage] = useState("");
+  const [message, setMessage] = useState([]);
+  const [chatSelectedById, setChatSelected] = useState(null);
+  const [chatSelectedByName, setChatName] = useState("");
+  const [chatSelectedByImg, setChatImg] = useState("");
+  const messagesEndRef = useRef(null);
 
-  /*useEffect(() => {
-    const id = localStorage.getItem("idLoggued");
-    setIdLoggued(id);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [message, chatSelectedById]); //ia
 
-    if (id) {
-      getUsuarioLogueado(id);
-    }
+  useEffect(() => {
+    const idLoggued = localStorage.getItem("idLoggued");
+    setIdLoggued(idLoggued);
+    chatsperuser(idLoggued);
+  }, []);
 
-    if (idJugadorSeleccionado) {
-      getJugadorSeleccionado(idJugadorSeleccionado);
-    }
-  }, [idJugadorSeleccionado]);
-
-  async function getUsuarioLogueado(id_usuario) {
-    try {
-      const res = await fetch(
-        `http://localhost:4000/usuarioRegistro?id_usuario=${id_usuario}`
-      );
-      const data = await res.json();
-      if (data && data.id_usuario) setUsuarioLogueado(data);
-    } catch {
-      setUsuarioLogueado(null);
-    }
-  }
-
-  async function getJugadorSeleccionado(idJugadorSeleccionado) {
-    try {
-      const res = await fetch(`http://localhost:4000/jugador?id_jugador=${idJugadorSeleccionado}`);
-      const data = await res.json();
-      if (data && data.id_jugador) setSelectedJugador(data);
-    } catch { }
-  }*/
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("newMessage", (data) => {
+      let newMessage = data.message;
+      setMessage((prevMessages) => [...prevMessages, newMessage]);
+    });
+    return () => {
+      socket.off("newMessage");
+    };
+  }, [socket]);
 
   useEffect(() => {
     async function getCantidadUsers() {
@@ -65,6 +60,73 @@ export default function Chats() {
     getCantidadUsers();
   }, [room]);
 
+  async function chatsperuser(id_Loggued) {
+    let result = await fetch("http://localhost:4000/chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario: id_Loggued }),
+    });
+    let response = await result.json();
+    if (response.msg == 1) {
+      setChats(response.respuesta);
+    }
+  }
+
+  async function bringMessages(id_chat) {
+    let result = await fetch("http://localhost:4000/bringmessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_chat }),
+    });
+    let response = await result.json();
+    let resmessages = response.messages;
+    setMessage(resmessages);
+    return response;
+  }
+
+  async function chatSelected(id_chat, nombre, foto) {
+    setChatSelected(id_chat);
+    setChatName(nombre);
+    setChatImg(foto);
+    await bringMessages(id_chat);
+    socket.emit("joinRoom", { room: id_chat });
+    localStorage.setItem("id_chat", id_chat);
+  }
+
+  async function send() {
+    const fecha = new Date();
+    const dia = fecha.toISOString().slice(0, 10);
+    const hora = fecha.getHours().toString().padStart(2, "0");
+    const minutos = fecha.getMinutes().toString().padStart(2, "0");
+    const resultado = `${dia} ${hora}:${minutos}`;
+    const idLoggued = localStorage.getItem("idLoggued");
+    const id_chat = localStorage.getItem("id_chat");
+    if (sendMessage.trim() !== "") {
+      if (sendMessage.trim().length > 255) {
+        alert("El mensaje es demasiado largo, máximo 255 caracteres");
+        setSendMessage("");
+        return;
+      } else {
+        let obj = {
+          nombre: idLoggued,
+          fechayhora: resultado,
+          texto: sendMessage,
+          id_usuario: idLoggued,
+          id_chat: id_chat,
+        };
+        socket.emit("sendMessage", { obj });
+        setSendMessage("");
+      }
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
   function handleVolver() {
     if (isConnected) {
       socket.emit("leaveRoom", /* Pasarle el room y el jugador */)
@@ -73,35 +135,64 @@ export default function Chats() {
     //Aramr  leaveRoom en el back -> Sacar al jugador de la bdd
   }
 
-
-
   return (
     <div className={styles.mainBgGradient}>
-      <div style={{ position: "absolute", top: 18, right: 24, zIndex: 30 }}>
-        <Button text="Volver" onClick={handleVolver} />
+      <div className={styles.volverBtnContainer}>
+        <Button text="VOLVER" onClick={handleVolver} />
+      </div>
+      <div className={styles.topHeader}>
+        <div className={styles.headerCol}>
+          <span className={styles.headerLabel}>MI JUGADOR:</span>
+          {selectedJugador && selectedJugador.img_url ? (
+            <img src={selectedJugador.img_url} alt="Mi Jugador" className={styles.avatar} />
+          ) : usuarioLogueado && usuarioLogueado.foto_url ? (
+            <img src={usuarioLogueado.foto_url} alt="Mi Jugador" className={styles.avatar} />
+          ) : (
+            <img src="/window.svg" alt="Mi Jugador" className={styles.avatar} />
+          )}
+        </div>
       </div>
       <div className={styles.chatArea}>
-        <div className={styles.topHeader}>
-          <div className={styles.headerCol}>
-            <span className={styles.headerLabel}>MI JUGADOR:</span>
-            {selectedJugador && selectedJugador.img_url ? (
-              <img
-                src={selectedJugador.img_url}
-                alt="Mi Jugador"
-                className={styles.avatar}
-              />
-            ) : usuarioLogueado && usuarioLogueado.foto_url ? (
-              <img
-                src={usuarioLogueado.foto_url}
-                alt="Mi Jugador"
-                className={styles.avatar}
-              />
+        <div className={styles.chatContainer}>
+          <div className={styles.messagesArea}>
+            {message.length == 0 ? (
+              <div className={styles.noMessages}>No hay mensajes</div>
             ) : (
-              <img src="/window.svg" alt="Mi Jugador" className={styles.avatar} />
+              message.map((msg, idx) => {
+                const idLoggued = localStorage.getItem("idLoggued");
+                const isMine = msg.id_usuario == idLoggued; // ia o raro
+                return (
+                  <div
+                    key={idx}
+                    className={isMine ? styles.myMessageRow : styles.otherMessageRow}
+                  >
+                    <div className={isMine ? styles.myMessage : styles.otherMessage}>
+                      <div className={styles.messageText}>{msg.texto}</div>
+                      <div className={styles.messageTime}>{msg.fechayhora}</div>
+                    </div>
+                  </div>
+                );
+              })
             )}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className={styles.inputWrapper}>
+            <input
+              type="text"
+              value={sendMessage}
+              onChange={(e) => setSendMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Escribe un mensaje..."
+              className={styles.chatInput}
+            />
+            <button
+              onClick={send}
+              className={styles.sendButton}
+            >
+              ➤
+            </button>
           </div>
         </div>
-
       </div>
     </div>
   );
