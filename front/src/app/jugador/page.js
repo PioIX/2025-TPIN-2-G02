@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Button from "../componentes/Button/Button";
-import Input from "../componentes/Input/input"; 
+import Input from "../componentes/Input/input";
 import { useRouter } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
 import styles from "@/app/jugador/jugador.module.css";
@@ -10,13 +10,23 @@ import styles from "@/app/jugador/jugador.module.css";
 export default function Home() {
   const [jugadores, setJugadores] = useState([]);
   const [selectedJugador, setSelectedJugador] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("Sala_1");
   const [searchTerm, setSearchTerm] = useState("");
   const { socket, isConnected } = useSocket();
   const router = useRouter();
 
   useEffect(() => {
     getJugadores();
+    joinRoom();
   }, []);
+
+  function joinRoom() {
+    if (isConnected) {
+      const idLogged = localStorage.getItem("id_usuario")
+      socket.emit("joinRoom", { room: "Sala_1", idLogged: idLogged });
+      router.push("/jugador");
+    }
+  }
 
   async function getJugadores() {
     let result = await fetch("http://localhost:4000/jugadores");
@@ -24,7 +34,7 @@ export default function Home() {
     setJugadores(response.players);
   }
 
-  const filteredJugadores = jugadores.filter(jugador => 
+  const filteredJugadores = jugadores.filter(jugador =>
     jugador.nombre_jugador.toLowerCase().includes(searchTerm.toLowerCase()) //filtra los jugadores que contengan lo que escribí
   );
 
@@ -36,21 +46,23 @@ export default function Home() {
   };
 
 
-    function handleJugar(){
-          // Guardar en localStorage 
-          if (selectedJugador) {
-            localStorage.setItem('selectedJugador', selectedJugador);
-          } else {
-            localStorage.removeItem('selectedJugador');
-          }
-          router.push(`/chats?jugador=${selectedJugador}`);
+  function handleJugar() {
+    if (selectedJugador) {
+      localStorage.setItem('selectedJugador', selectedJugador);
+    } else {
+      localStorage.removeItem('selectedJugador');
     }
-  
+
+    localStorage.setItem('selectedRoom', selectedRoom);
+
+    router.push(`/chats?jugador=${selectedJugador}&room=${selectedRoom}`);
+  }
+
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>ELIJA SU JUGADOR PARA COMENZAR</h1>
-      
+
       <div className={styles.searchBox}>
         <Input
           type="text"
@@ -69,7 +81,7 @@ export default function Home() {
             onChange={e => setSelectedJugador(e.target.value)}
             size={Math.min(filteredJugadores.length + 1, 4)} //muestra máximo 4 opciones asi el select no ocupa toda la pantalla
           >
-            
+
             {filteredJugadores.map(jugador => (
               <option key={jugador.id_jugador} value={jugador.id_jugador}>
                 {jugador.nombre_jugador}
@@ -87,7 +99,7 @@ export default function Home() {
       )}
 
       <div>
-        <Button onClick={handleJugar} text={"SELECCIONAR"}/>
+        <Button onClick={handleJugar} text={"SELECCIONAR"} />
       </div>
     </div>
   );
