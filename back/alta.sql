@@ -110,7 +110,3 @@ INSERT INTO Mensajes (contenido, id_usuario, id_partida) VALUES
 
 -- Insertar usuarios en salas
 INSERT INTO UsuariosPorSala (id_usuario, id_sala) VALUES
-(1, 1),  -- Juan se une a Sala_1
-(2, 1),  -- María se une a Sala_1
-(3, 2),  -- Carlos se une a Sala_2
-(4, 2);  -- Ana se une a Sala_2

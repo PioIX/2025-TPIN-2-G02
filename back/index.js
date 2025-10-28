@@ -43,8 +43,14 @@ io.use((socket, next) => {
   A PARTIR DE ACÁ LOS EVENTOS DEL SOCKET
 */
 
+
+let contadorParticipantes = 0;
+
 io.on("connection", (socket) => {
   const req = socket.request;
+
+  
+
 
   socket.on('joinRoom', async (data) => {
     console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
@@ -60,10 +66,14 @@ io.on("connection", (socket) => {
     INNER JOIN Salas ON UsuariosPorSala.id_sala = Salas.id_sala
     WHERE Salas.nombre_sala = '${data.room}';
       `);
+
+
+
     const cantidadUsuarios = contar.length;
 
     if (cantidadUsuarios >= 2) {
       console.log('maxPlayersReached')
+      console.log(cantidadUsuarios)
       socket.emit('maxPlayersReached', { message: "Se ha alcanzado el máximo de jugadores en esta sala." });
     } else {
       let id_sala = await realizarQuery(`SELECT Salas.id_sala

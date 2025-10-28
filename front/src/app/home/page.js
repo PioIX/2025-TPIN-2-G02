@@ -48,6 +48,7 @@ export default function socketPage() {
     }
 
     function joinRoom() {
+
         if (isConnected) {
             const idLogged = localStorage.getItem("id_usuario")
             socket.emit("joinRoom", { room: "Sala_1", idLogged: idLogged});
