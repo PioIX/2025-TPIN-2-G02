@@ -49,7 +49,13 @@ let contadorParticipantes = 0;
 io.on("connection", (socket) => {
   const req = socket.request;
 
-  
+  socket.on('leaveRoom', async (data) => {
+    await realizarQuery(`
+        UPDATE Salas
+        SET Salas.cantidad_participantes = Salas.cantidad_participantes - 1
+        WHERE Salas.nombre_sala = '${data.room}';
+        `);
+  });
 
 
   socket.on('joinRoom', async (data) => {
@@ -57,6 +63,11 @@ io.on("connection", (socket) => {
 
     if (req.session.room != undefined) {
       socket.leave(req.session.room);
+      await realizarQuery(`
+        UPDATE Salas
+        SET Salas.cantidad_participantes = Salas.cantidad_participantes - 1
+        WHERE Salas.nombre_sala = '${req.session.room}';
+        `);
     }
 
     req.session.room = data.room;
@@ -66,8 +77,6 @@ io.on("connection", (socket) => {
     INNER JOIN Salas ON UsuariosPorSala.id_sala = Salas.id_sala
     WHERE Salas.nombre_sala = '${data.room}';
       `);
-
-
 
     const cantidadUsuarios = contar.length;
 
