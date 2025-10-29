@@ -1,7 +1,7 @@
 "use client";
 
 import Button from "@/app/componentes/Button/Button";
-import Input from "@/app/componentes/Input/input"; 
+import Input from "@/app/componentes/Input/input";
 import Title from "@/app/componentes/Title/Title";
 import styles from "./home.module.css";
 import { useSocket } from "@/hooks/useSocket";
@@ -14,6 +14,7 @@ export default function socketPage() {
     const [salas, setSalas] = useState([])
 
     useEffect(() => {
+        getSalas()
         if (!socket) return;
 
         const handlePingAll = (recibido) => {
@@ -31,14 +32,22 @@ export default function socketPage() {
 
         socket.on("pingAll", handlePingAll);
         socket.on("newMessage", handleNewMessage);
-        socket.on('userJoined')
+        socket.on('userJoined', handleUserJoined);
 
         return () => {
             // Limpieza de eventos al desmontar el componente
             socket.off("pingAll", handlePingAll);
             socket.off("newMessage", handleNewMessage);
+            socket.off('userJoined', handleUserJoined);
         };
     }, [socket]);
+
+    async function getSalas() {
+        let result = await fetch("http://localhost:4000/Salas");
+        let response = await result.json();
+        setSalas(response.sala);
+    }
+
 
     function pingAll() {
         if (isConnected) {
@@ -52,15 +61,14 @@ export default function socketPage() {
 
         if (isConnected) {
             const idLogged = localStorage.getItem("id_usuario")
-            socket.emit("joinRoom", { room: id, idLogged: idLogged});
+            socket.emit("joinRoom", { room: id, idLogged: idLogged });
+            console.log("Usuario unido: ", idLogged)
+            router.push("/jugador");
         } else {
             console.error("Socket no está conectado");
         }
     }
 
-    useEffect(() => {
-        //Hacer un fetch que traiga todas las salas
-    }, []);
 
     return (
         <div className={styles.container}>
@@ -70,13 +78,13 @@ export default function socketPage() {
                 <p className={styles.notice}>Conecta con el servidor para jugar.</p>
 
                 {salas.map((sala) => (
-                    <div key={sala.id} className={styles.sala}>
+                    <div key={sala.id_sala} className={styles.sala}>
                         <p>{sala.nombre}</p>
                         <p>{sala.cantidad_participantes} / {sala.max_jugadores} </p>
                         <Button text={"Unirse"} onClick={() => joinRoom(sala.id)} />
                     </div>
                 ))}
-                
+
             </div>
         </div>
     );
