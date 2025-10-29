@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 export default function socketPage() {
     const { socket, isConnected } = useSocket();
     const router = useRouter();
+    const [salas, setSalas] = useState([])
 
     useEffect(() => {
         if (!socket) return;
@@ -47,15 +48,19 @@ export default function socketPage() {
         }
     }
 
-    function joinRoom() {
+    function joinRoom(id) {
 
         if (isConnected) {
             const idLogged = localStorage.getItem("id_usuario")
-            socket.emit("joinRoom", { room: "Sala_1", idLogged: idLogged});
+            socket.emit("joinRoom", { room: id, idLogged: idLogged});
         } else {
             console.error("Socket no está conectado");
         }
     }
+
+    useEffect(() => {
+        //Hacer un fetch que traiga todas las salas
+    }, []);
 
     return (
         <div className={styles.container}>
@@ -64,12 +69,14 @@ export default function socketPage() {
 
                 <p className={styles.notice}>Conecta con el servidor para jugar.</p>
 
-                <div className={styles.controls}>
-                    <div className={styles.actions}>
-                        {/*<Button text={"PingAll"} onClick={pingAll} />*/}
-                        <Button text={"Unirse a la sala"} onClick={joinRoom} />
+                {salas.map((sala) => (
+                    <div key={sala.id} className={styles.sala}>
+                        <p>{sala.nombre}</p>
+                        <p>{sala.cantidad_participantes} / {sala.max_jugadores} </p>
+                        <Button text={"Unirse"} onClick={() => joinRoom(sala.id)} />
                     </div>
-                </div>
+                ))}
+                
             </div>
         </div>
     );
