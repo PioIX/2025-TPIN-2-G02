@@ -88,23 +88,23 @@ io.on("connection", (socket) => {
       let id_sala = await realizarQuery(`SELECT Salas.id_sala
   FROM Salas
   WHERE Salas.nombre_sala = '${data.room}';`)
-  console.log(`SELECT Salas.id_sala
+      console.log(`SELECT Salas.id_sala
   FROM Salas
   WHERE Salas.nombre_sala = '${data.room}';`)
-  if (id_sala.length == 0) {
-      console.log("No existe la sala")
-  } else {
-    
-    await realizarQuery(`
+      if (id_sala.length == 0) {
+        console.log("No existe la sala")
+      } else {
+
+        await realizarQuery(`
       INSERT INTO UsuariosPorSala (id_usuario, id_sala) VALUES (${data.idLogged}, ${id_sala[0].id_sala})
       `);
-      
-      await realizarQuery(`
+
+        await realizarQuery(`
         UPDATE Salas
         SET Salas.cantidad_participantes = Salas.cantidad_participantes + 1
         WHERE Salas.nombre_sala = '${data.room}';
         `);
-        
+
         socket.join(req.session.room);
         io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
         io.to(req.session.room).emit('userJoined', { user: req.session.user, message: "Un nuevo jugador se ha unido a la sala." });
@@ -376,6 +376,15 @@ app.post("/salas", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get("/Salas", async (req, res) => {
+  try {
+    const sala = await realizarQuery("SELECT * FROM Salas");
+    res.send({ sala });
+  } catch (err) {
+    res.send(err.message)
   }
 });
 

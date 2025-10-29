@@ -49,8 +49,9 @@ export default function Home() {
 
   function handleJugar() {
     if (selectedJugador) {
-      const selectedRoom = searchParams.get("room"); 
-      const idLogged = searchParams.get("idLogged"); 
+      const selectedRoom = searchParams.get("room");
+      const idLogged = searchParams.get("idLogged");
+
 
       if (selectedRoom && selectedJugador && idLogged) {
         router.push(
