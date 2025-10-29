@@ -101,22 +101,59 @@ export default function Chats() {
     const resultado = `${dia} ${hora}:${minutos}`;
     const idLoggued = localStorage.getItem("idLoggued");
     const id_chat = localStorage.getItem("id_chat");
-    if (sendMessage.trim() !== "") {
-      if (sendMessage.trim().length > 255) {
-        alert("El mensaje es demasiado largo, máximo 255 caracteres");
-        setSendMessage("");
+    // Validación simple: no enviar mensaje vacío
+    if (!sendMessage || sendMessage.length === 0) return;
+
+    // Validación longitud
+    if (sendMessage.length > 1000) { // límite razonable
+      alert("El mensaje es demasiado largo");
+      return;
+    }
+
+    // Crear objeto de mensaje simple y claro
+    const mensajeObjeto = {
+      contenido: sendMessage,
+      fecha_envio: resultado,
+      id_usuario: idLoggued,
+      id_partida: id_chat,
+    };
+
+    try {
+      // Guardar en la base de datos (backend)
+      const res = await fetch('http://localhost:4000/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenido: mensajeObjeto.contenido, id_usuario: mensajeObjeto.id_usuario, id_partida: mensajeObjeto.id_partida })
+      });
+
+      const saved = await res.json();
+      if (!res.ok) {
+        console.error('Error backend al guardar mensaje', saved);
+        alert('No se pudo guardar el mensaje en el servidor');
         return;
-      } else {
-        let obj = {
-          nombre: idLoggued,
-          fechayhora: resultado,
-          texto: sendMessage,
-          id_usuario: idLoggued,
-          id_chat: id_chat,
-        };
-        socket.emit("sendMessage", { obj });
-        setSendMessage("");
       }
+
+      // Preparar objeto para la UI (usar datos retornados del servidor cuando existan)
+      const mensajeParaUI = {
+        id_mensaje: saved.id_mensaje || Date.now(),
+        texto: mensajeObjeto.contenido,
+        fechayhora: mensajeObjeto.fecha_envio,
+        id_usuario: mensajeObjeto.id_usuario,
+      };
+
+      // Actualizar UI local
+      setMessage(prev => [...prev, mensajeParaUI]);
+
+      // Emitir por socket para notificar a otros clientes
+      if (socket) {
+        socket.emit('sendMessage', { obj: mensajeParaUI });
+      }
+
+      // Limpiar input
+      setSendMessage('');
+    } catch (err) {
+      console.error('Error enviando mensaje:', err);
+      alert('Error de red al enviar mensaje');
     }
   }
 
