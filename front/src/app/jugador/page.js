@@ -48,17 +48,14 @@ export default function Home() {
   };
 
   function handleJugar() {
-    if (selectedJugador) {
-      const selectedRoom = searchParams.get("room");
-      const idLogged = searchParams.get("idLogged");
+    // Obtener room e idLogged desde query o localStorage
+    const selectedRoom = searchParams.get("room") || localStorage.getItem("room") || "Sala_1";
+    const idLogged = searchParams.get("idLogged") || localStorage.getItem("idLoggued") || "";
 
+    console.log('handleJugar:', { selectedJugador, selectedRoom, idLogged });
 
-      if (selectedRoom && selectedJugador && idLogged) {
-        router.push(
-          `/chats?jugador=${selectedJugador}&room=${selectedRoom}&idLogged=${idLogged}`
-        );
-      }
-    }
+    // Navegar siempre a /chats (incluso si selectedJugador está vacío)
+    router.push(`/chats?jugador=${encodeURIComponent(selectedJugador || '')}&room=${encodeURIComponent(selectedRoom)}&idLogged=${encodeURIComponent(idLogged)}`);
   }
 
   return (
