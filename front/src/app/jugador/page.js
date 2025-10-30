@@ -7,13 +7,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
 import styles from "@/app/jugador/jugador.module.css";
 
-export default function Home() {
+export default function Jugador() {
   const [jugadores, setJugadores] = useState([]);
   const [selectedJugador, setSelectedJugador] = useState("");
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const { socket, isConnected } = useSocket();
   const router = useRouter();
+  const selectedRoom = searchParams.get("nombre_sala");
+  const idLogged = searchParams.get("id_usuario");
+  const nombreJugador = searchParams.get("nombre_jugador")
 
   useEffect(() => {
     getJugadores();
@@ -22,12 +25,10 @@ export default function Home() {
 
   function joinRoom() {
     if (isConnected) {
-      const idLogged = searchParams.get("idLogged");
-      const roomName = searchParams.get("room") || "Sala_1";
+      const idLogged = searchParams.get("id_usuario");
 
       socket.emit("joinRoom", { room: roomName, idLogged: idLogged });
 
-      router.push(`/jugador?room=${roomName}&idLogged=${idLogged}`);
     }
   }
 
@@ -48,14 +49,9 @@ export default function Home() {
   };
 
   function handleJugar() {
-    // Obtener room e idLogged desde query o localStorage
-    const selectedRoom = searchParams.get("room") || localStorage.getItem("room") || "Sala_1";
-    const idLogged = searchParams.get("idLogged") || localStorage.getItem("idLoggued") || "";
+    console.log('handleJugar:', { nombreJugador, selectedRoom, idLogged });
 
-    console.log('handleJugar:', { selectedJugador, selectedRoom, idLogged });
-
-    // Navegar siempre a /chats (incluso si selectedJugador está vacío)
-    router.push(`/chats?jugador=${encodeURIComponent(selectedJugador || '')}&room=${encodeURIComponent(selectedRoom)}&idLogged=${encodeURIComponent(idLogged)}`);
+    router.push(`/chats?jugador=${nombreJugador}&room=${selectedRoom}&idLogged=${idLogged}`);
   }
 
   return (

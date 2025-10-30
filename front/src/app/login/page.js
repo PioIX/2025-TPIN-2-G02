@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Poppins } from "next/font/google";
 import Title from "../componentes/Title/Title";
 import Button from "../componentes/Button/Button";
@@ -14,10 +14,12 @@ const poppins = Poppins({
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const idLogged = searchParams.get("id_usuario");
 
   // 🔹 Manejar inicio de sesión
   async function handleLogin() {
@@ -39,15 +41,9 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      // 🔹 Si el login fue exitoso
-      if (data.ok) {
-        // Guardar usuario logueado en localStorage
-        localStorage.setItem("id_usuario", data.usuario.id_usuario);
-        localStorage.setItem("nombre_usuario", data.usuario.nombre);
-        console.log("Usuario logueado:", data.usuario);
 
-        // Redirigir al home o a la página principal de la app
-        router.push("/inicio");
+      if (data.ok) {
+        router.push(`/inicio?idLogged=${idLogged}`);
       } else {
         // Si credenciales incorrectas
         setError(data.mensaje || "Usuario o contraseña incorrectos");

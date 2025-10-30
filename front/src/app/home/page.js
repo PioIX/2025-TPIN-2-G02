@@ -10,9 +10,11 @@ import { useRouter } from "next/navigation";
 
 export default function socketPage() {
     const { socket, isConnected } = useSocket();
+    const searchParams = useSearchParams();
     const router = useRouter();
-    const [salas, setSalas] = useState([])
-
+    const [salas, setSalas] = useState([]);
+    const idLogged = searchParams.get("id_usuario");
+    const selectedRoom = searchParams.get("nombre_sala");
     useEffect(() => {
         getSalas()
         if (!socket) return;
@@ -60,10 +62,9 @@ export default function socketPage() {
     function joinRoom(id) {
 
         if (isConnected) {
-            const idLogged = localStorage.getItem("id_usuario")
             socket.emit("joinRoom", { room: id, idLogged: idLogged });
             console.log("Usuario unido: ", idLogged)
-            router.push("/jugador");
+            router.push(`/jugador?idLogged=${idLogged}&room=${selectedRoom}`);
         } else {
             console.error("Socket no está conectado");
         }
