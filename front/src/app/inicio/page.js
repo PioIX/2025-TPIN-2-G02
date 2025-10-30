@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/app/componentes/Button/Button";
 import styles from "./inicio.module.css";
 import { Poppins } from "next/font/google";
@@ -13,15 +13,17 @@ const poppins = Poppins({
   weight: ["400", "600", "700"],
 });
 
+
 export default function Inicio() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showInstrucciones, setShowInstrucciones] = useState(false);
-
   const handleOpenInstrucciones = () => setShowInstrucciones(true);
   const handleCloseInstrucciones = () => setShowInstrucciones(false);
+  const idLogged = searchParams.get("id_usuario");
 
   function handleEntrar() {
-    router.push("/home");
+    router.push(`/home?idLogged=${idLogged}`);
   }
 
   return (
