@@ -49,9 +49,11 @@ export default function Jugador() {
   };
 
   function handleJugar() {
-    console.log('handleJugar:', { nombreJugador, selectedRoom, idLogged });
-
-    router.push(`/chats?jugador=${nombreJugador}&room=${selectedRoom}&idLogged=${idLogged}`);
+    // Buscar el jugador seleccionado
+    const jugadorObj = jugadores.find((j) => j.id_jugador === parseInt(selectedJugador));
+    const fotoJugador = jugadorObj?.foto_url || jugadorObj?.img_url || "";
+    const nombreJugadorSeleccionado = jugadorObj?.nombre_jugador || nombreJugador;
+    router.push(`/chats?jugador=${encodeURIComponent(nombreJugadorSeleccionado)}&room=${selectedRoom}&idLogged=${idLogged}&foto=${encodeURIComponent(fotoJugador)}`);
   }
 
   return (

@@ -14,6 +14,7 @@ export default function Chats() {
   const searchParams = useSearchParams();
   const idJugadorSeleccionado = searchParams.get("jugador");
   const room = searchParams.get("room");
+  const fotoJugadorSeleccionado = searchParams.get("foto");
   const { socket, isConnected } = useSocket({ serverUrl: SOCKET_URL_LOCAL });
   const [idLoggued, setIdLoggued] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
@@ -180,10 +181,8 @@ export default function Chats() {
       <div className={styles.topHeader}>
         <div className={styles.headerCol}>
           <span className={styles.headerLabel}>MI JUGADOR:</span>
-          {selectedJugador && selectedJugador.img_url ? (
-            <img src={selectedJugador.img_url} alt="Mi Jugador" className={styles.avatar} />
-          ) : usuarioLogueado && usuarioLogueado.foto_url ? (
-            <img src={usuarioLogueado.foto_url} alt="Mi Jugador" className={styles.avatar} />
+          {fotoJugadorSeleccionado ? (
+            <img src={fotoJugadorSeleccionado} alt="Mi Jugador" className={styles.avatar} />
           ) : (
             <img src="/window.svg" alt="Mi Jugador" className={styles.avatar} />
           )}
