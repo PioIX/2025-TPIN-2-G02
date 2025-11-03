@@ -19,20 +19,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const idLogged = searchParams.get("id_usuario");
 
-  // 🔹 Manejar inicio de sesión
   async function handleLogin() {
     setError("");
 
-    // Validación simple
     if (email.trim() === "" || password.trim() === "") {
       setError("Debes ingresar un email y contraseña válidos.");
       return;
     }
 
     try {
-      // 🔹 Petición al backend para autenticar
       const res = await fetch("http://localhost:4000/usuarioLogin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,14 +36,15 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
-
+      console.log("DATA USUARIO",data.usuario.id_usuario)
 
       if (data.ok) {
-        router.push(`/inicio?idLogged=${idLogged}`);
+        localStorage.setItem("idLogged", data.usuario.id_usuario)
+        router.push(`/inicio?idLogged=${data.usuario.id_usuario}`);
       } else {
-        // Si credenciales incorrectas
         setError(data.mensaje || "Usuario o contraseña incorrectos");
       }
+      
     } catch (err) {
       console.error("Error en el login:", err);
       setError("Error al conectar con el servidor");
@@ -59,11 +56,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         <Title text="INICIO DE SESIÓN" />
 
-        {/* Mensaje de error */}
-        {error && <p className={styles.error}>{error}</p>}
-
         <div className={styles.fields}>
-          {/* Campo de email */}
           <input
             type="email"
             placeholder="Ingresa tu email"
