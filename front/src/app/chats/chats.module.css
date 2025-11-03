@@ -1,20 +1,22 @@
+/* Header superior con oponente y mi jugador */
 .topHeader {
   position: absolute;
+  top: 0;
   left: 0;
-  top: 0; /* el header llega hasta el borde superior */
-  width: 100px; /* ocupar todo el ancho */
+  width: 100vw; /* Ahora ocupa todo el ancho de la pantalla */
   height: 120px; /* aumentado para avatar grande */
-   display: flex;
+  display: flex;
   flex-direction: row;
-  justify-content: center; /* centrar contenido horizontalmente */
-  align-items: center; /* centrar contenido verticalmente */
-  gap: 16px;
-  padding: 0 20px; /* pequeño padding lateral */
+  justify-content: flex-start; /* pegado a la izquierda */
+  align-items: center;
+  gap: 32px;
+  padding: 0 0 0 40px;
   z-index: 20;
   background: #fff;
   border-radius: 0;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
 }
+
 .topHeader .headerLabel {
   font-size: 25px;
   font-weight: 800;
@@ -23,21 +25,7 @@
   letter-spacing: 2px;
   text-transform: uppercase;
 }
-/* Header superior con oponente y mi jugador */
-.topHeader {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: calc(100vw - 340px); /* Resta el ancho del sidebar */
-  height: 120px; /* aumentado para avatar grande */
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 32px;
-  padding: 0 40px 0 0;
-  z-index: 20;
-}
+
 /* Header en la parte superior derecha del área de chat */
 .rightHeader {
   position: absolute;
