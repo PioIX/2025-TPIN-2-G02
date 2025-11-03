@@ -20,7 +20,7 @@ export default function Inicio() {
   const [showInstrucciones, setShowInstrucciones] = useState(false);
   const handleOpenInstrucciones = () => setShowInstrucciones(true);
   const handleCloseInstrucciones = () => setShowInstrucciones(false);
-  const idLogged = searchParams.get("id_usuario");
+  const idLogged = searchParams.get("idLogged");
 
   function handleEntrar() {
     router.push(`/home?idLogged=${idLogged}`);
