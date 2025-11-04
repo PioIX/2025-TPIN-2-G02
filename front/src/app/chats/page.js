@@ -16,7 +16,7 @@ export default function Chats() {
   const room = searchParams.get("room");
   const fotoJugadorSeleccionado = searchParams.get("foto");
   const { socket, isConnected } = useSocket({ serverUrl: SOCKET_URL_LOCAL });
-  const [idLoggued, setIdLoggued] = useState(null);
+  const [idLogged, setIdLogged] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [selectedJugador, setSelectedJugador] = useState(null);
   const [cantidadUsers, setCantidadUsers] = useState(0);
@@ -32,11 +32,7 @@ export default function Chats() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [message, chatSelectedById]); //ia
 
-  useEffect(() => {
-    const idLoggued = localStorage.getItem("idLoggued");
-    setIdLoggued(idLoggued);
-    chatsperuser(idLoggued);
-  }, []);
+
 
   useEffect(() => {
     if (!socket) return;
@@ -49,50 +45,7 @@ export default function Chats() {
     };
   }, [socket]);
 
-  useEffect(() => {
-    async function getCantidadUsers() {
-      if (room) { // Solo hacer el fetch si el nombre de la sala está definido
-        let result = await fetch(`http://localhost:4000/cantidadDeUsersPorSala?room=${room}`);
-        let response = await result.json(); // Convertir la respuesta a JSON
-        setCantidadUsers(response.cantidadUsers); // Actualizar el estado con la cantidad de usuarios
-      }
-    }
 
-    getCantidadUsers();
-  }, [room]);
-
-  async function chatsperuser(id_Loggued) {
-    let result = await fetch("http://localhost:4000/chats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_usuario: id_Loggued }),
-    });
-    let response = await result.json();
-    if (response.msg == 1) {
-      setChats(response.respuesta);
-    }
-  }
-
-  async function bringMessages(id_chat) {
-    let result = await fetch("http://localhost:4000/bringmessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_chat }),
-    });
-    let response = await result.json();
-    let resmessages = response.messages;
-    setMessage(resmessages);
-    return response;
-  }
-
-  async function chatSelected(id_chat, nombre, foto) {
-    setChatSelected(id_chat);
-    setChatName(nombre);
-    setChatImg(foto);
-    await bringMessages(id_chat);
-    socket.emit("joinRoom", { room: id_chat });
-    localStorage.setItem("id_chat", id_chat);
-  }
 
   async function send() {
     const fecha = new Date();
@@ -100,62 +53,6 @@ export default function Chats() {
     const hora = fecha.getHours().toString().padStart(2, "0");
     const minutos = fecha.getMinutes().toString().padStart(2, "0");
     const resultado = `${dia} ${hora}:${minutos}`;
-    const idLoggued = localStorage.getItem("idLoggued");
-    const id_chat = localStorage.getItem("id_chat");
-    // Validación simple: no enviar mensaje vacío
-    if (!sendMessage || sendMessage.length === 0) return;
-
-    // Validación longitud
-    if (sendMessage.length > 1000) { // límite razonable
-      alert("El mensaje es demasiado largo");
-      return;
-    }
-
-    // Crear objeto de mensaje simple y claro
-    const mensajeObjeto = {
-      contenido: sendMessage,
-      fecha_envio: resultado,
-      id_usuario: idLoggued,
-      id_partida: id_chat,
-    };
-
-    try {
-      // Guardar en la base de datos (backend)
-      const res = await fetch('http://localhost:4000/mensajes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contenido: mensajeObjeto.contenido, id_usuario: mensajeObjeto.id_usuario, id_partida: mensajeObjeto.id_partida })
-      });
-
-      const saved = await res.json();
-      if (!res.ok) {
-        console.error('Error backend al guardar mensaje', saved);
-        alert('No se pudo guardar el mensaje en el servidor');
-        return;
-      }
-
-      // Preparar objeto para la UI (usar datos retornados del servidor cuando existan)
-      const mensajeParaUI = {
-        id_mensaje: saved.id_mensaje || Date.now(),
-        texto: mensajeObjeto.contenido,
-        fechayhora: mensajeObjeto.fecha_envio,
-        id_usuario: mensajeObjeto.id_usuario,
-      };
-
-      // Actualizar UI local
-      setMessage(prev => [...prev, mensajeParaUI]);
-
-      // Emitir por socket para notificar a otros clientes
-      if (socket) {
-        socket.emit('sendMessage', { obj: mensajeParaUI });
-      }
-
-      // Limpiar input
-      setSendMessage('');
-    } catch (err) {
-      console.error('Error enviando mensaje:', err);
-      alert('Error de red al enviar mensaje');
-    }
   }
 
   function handleKeyDown(e) {
@@ -167,7 +64,6 @@ export default function Chats() {
 
   function handleVolver() {
     if (isConnected) {
-      socket.emit("leaveRoom", /* Pasarle el room y el jugador */)
       router.push("/jugador");
     }
     //Aramr  leaveRoom en el back -> Sacar al jugador de la bdd
@@ -195,14 +91,14 @@ export default function Chats() {
               <div className={styles.noMessages}>No hay mensajes</div>
             ) : (
               message.map((msg, idx) => {
-                const idLoggued = localStorage.getItem("idLoggued");
-                const isMine = msg.id_usuario == idLoggued; // ia o raro
+                const idLoggedLocal = localStorage.getItem("idLogged");
+                const MensajeUsuario = (msg.id_usuario) = (idLoggedLocal); //ia o raro
                 return (
                   <div
                     key={idx}
-                    className={isMine ? styles.myMessageRow : styles.otherMessageRow}
+                    className={MensajeUsuario ? styles.myMessageRow : styles.otherMessageRow}
                   >
-                    <div className={isMine ? styles.myMessage : styles.otherMessage}>
+                    <div className={MensajeUsuario ? styles.myMessage : styles.otherMessage}>
                       <div className={styles.messageText}>{msg.texto}</div>
                       <div className={styles.messageTime}>{msg.fechayhora}</div>
                     </div>

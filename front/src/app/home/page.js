@@ -51,15 +51,6 @@ export default function socketPage() {
         setSalas(response.sala);
     }
 
-
-    function pingAll() {
-        if (isConnected) {
-            socket.emit("pingAll", { mensaje: "ping desde el front" });
-        } else {
-            console.error("Socket no está conectado");
-        }
-    }
-
     function joinRoom(idSala) {
         let sala = {}
         if (isConnected) {
