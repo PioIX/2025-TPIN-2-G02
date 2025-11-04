@@ -1,1 +1,8 @@
-# Proyecto_final_G02
+# Proyecto_final_G02 ¿Quien es quien?
+Este juego es una versión digital del clásico "¿Quién es Quién?", pero con un giro futbolístico. En lugar de personajes genéricos, los jugadores deben adivinar el futbolista secreto que el otro ha elegido. La dinámica sigue siendo la misma: se hacen preguntas que solo se pueden responder con "sí" o "no", pero las preguntas están centradas en las características de los jugadores de fútbol, como el club en el que juegan, su posición, su nacionalidad o características físicas específicas.
+
+Al inicio del juego, cada jugador selecciona un futbolista de una lista predefinida sin revelar su elección. Luego, se alternan los turnos para hacer preguntas sobre el futbolista secreto del oponente. Por ejemplo, podrías preguntar si el jugador juega en una liga europea, si es delantero, o si ha ganado el Balón de Oro. Con cada respuesta, los jugadores van descartando de la lista a aquellos futbolistas que no coinciden con la descripción obtenida, acercándose cada vez más a la respuesta correcta.
+
+El objetivo es ser el primero en adivinar quién es el jugador secreto de tu rival. Cuando creas saber quién es, puedes hacer tu suposición diciendo: "Tu jugador es [nombre del futbolista]". Si acertaste, ganas la partida, pero si te equivocas, pierdes tu turno y el juego continúa. La clave está en hacer preguntas inteligentes para reducir rápidamente las opciones, sin dar demasiadas pistas al oponente.
+
+Es un juego ideal para los fanáticos del fútbol, donde la rapidez mental y el conocimiento del deporte se combinan para crear una experiencia divertida y competitiva. Aunque las reglas son sencillas, cada partida ofrece nuevos desafíos, y el conocimiento sobre los futbolistas puede ser tanto tu ventaja como tu desafío.
