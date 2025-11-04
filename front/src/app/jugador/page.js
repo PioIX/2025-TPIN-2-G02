@@ -15,7 +15,7 @@ export default function Jugador() {
   const { socket, isConnected } = useSocket();
   const router = useRouter();
   const selectedRoom = searchParams.get("nombre_sala");
-  const idLogged = searchParams.get("id_usuario");
+  const idLogged = searchParams.get("idLogged");
   const nombreJugador = searchParams.get("nombre_jugador")
 
   useEffect(() => {
@@ -49,11 +49,11 @@ export default function Jugador() {
   };
 
   function handleJugar() {
-    // Buscar el jugador seleccionado
+    // cambiar menos router.push
     const jugadorObj = jugadores.find((j) => j.id_jugador === parseInt(selectedJugador));
     const fotoJugador = jugadorObj?.foto_url || jugadorObj?.img_url || "";
     const nombreJugadorSeleccionado = jugadorObj?.nombre_jugador || nombreJugador;
-    router.push(`/chats?jugador=${encodeURIComponent(nombreJugadorSeleccionado)}&room=${selectedRoom}&idLogged=${idLogged}&foto=${encodeURIComponent(fotoJugador)}`);
+    router.push(`/chats?idLogged=${idLogged}&room=${idSala}`)
   }
 
   return (
@@ -87,6 +87,7 @@ export default function Jugador() {
         </div>
       )}
 
+      {/*cambiar*/}
       {selectedJugador && (
         <div className={styles.selectedInfo}>
           <strong>Jugador seleccionado:</strong>{" "}
