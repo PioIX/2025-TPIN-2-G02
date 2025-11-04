@@ -99,3 +99,16 @@ async function crearSala(nombre_sala, id_usuario1, id_usuario2) {
   console.log("Sala creada:", data);
   return data;
 }
+
+export default {
+  getJugadores,
+  crearJugador,
+  getPartidas,
+  crearPartida,
+  getUsuariosPorPartida,
+  agregarUsuarioAPartida,
+  getMensajes,
+  enviarMensaje,
+  getSalas,
+  crearSala
+}
