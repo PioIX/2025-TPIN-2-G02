@@ -1,3 +1,5 @@
+"use client"; // Correct directive for client-side components
+
 import { useState, useEffect } from "react";
 import Button from "../componentes/Button/Button";
 import Input from "../componentes/Input/input";
@@ -13,7 +15,7 @@ export default function Jugador() {
   const { socket, isConnected } = useSocket();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedRoom = searchParams.get("nombre_sala");
+  const selectedRoom = searchParams.get("room");
   const idLogged = searchParams.get("idLogged");
 
   useEffect(() => {
@@ -51,9 +53,9 @@ export default function Jugador() {
 
   function handleJugar() {
     if (jugadorInfo) {
-      const fotoJugador = jugadorInfo.img_url;
+      const fotoJugador = jugadorInfo.img_url; 
       const nombreJugadorSeleccionado = jugadorInfo.nombre_jugador;
-      router.push(`/chats?idLogged=${idLogged}&room=${selectedRoom}`);
+      router.push(`/chats?idLogged=${idLogged}&room=${selectedRoom}&jugador=${nombreJugadorSeleccionado}&img_url=${fotoJugador}`);
     }
   }
 
@@ -81,7 +83,7 @@ export default function Jugador() {
           >
             {filteredJugadores.map((jugador) => (
               <option key={jugador.id_jugador} value={jugador.id_jugador}>
-                {jugador.nombre_jugador}
+                {jugador.nombre_jugador} 
               </option>
             ))}
           </select>

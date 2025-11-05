@@ -13,10 +13,13 @@ const SOCKET_URL_REMOTE = "181.47.29.35";
 export default function Chats() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // Recoger los parámetros de la URL
   const idJugadorSeleccionado = searchParams.get("jugador");
   const room = searchParams.get("room");
-  const fotoJugadorSeleccionado = searchParams.get("img_url");
+  const fotoJugadorSeleccionado = searchParams.get("img_url"); // Obtén la URL de la imagen
   const { socket, isConnected } = useSocket({ serverUrl: SOCKET_URL_LOCAL });
+  
   const [idLogged, setIdLogged] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [selectedJugador, setSelectedJugador] = useState(null);
@@ -31,7 +34,7 @@ export default function Chats() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [message, chatSelectedById]); //ia
+  }, [message, chatSelectedById]);
 
   useEffect(() => {
     if (!socket) return;
@@ -51,14 +54,10 @@ export default function Chats() {
     const hora = fecha.getHours().toString().padStart(2, "0");
     const minutos = fecha.getMinutes().toString().padStart(2, "0");
     const resultado = `${dia} ${hora}:${minutos}`;
-    // Enviar mensaje al servidor
-    // Actualizar estado localmente
-    const resultEnviarMensaje= await fetch.enviarMensaje(sendMessage, idLogged, room);
+    const resultEnviarMensaje = await fetch.enviarMensaje(sendMessage, idLogged, room);
     console.log("Mensaje enviado:", resultEnviarMensaje, " Texto enviado:", sendMessage);
-    // Enviar por socket elmensaje
     socket.emit("sendMessage", { message: sendMessage, id:idLogged });
   }
-  // Pablo dijo que probaramos si funciona esto.
 
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -71,7 +70,6 @@ export default function Chats() {
     if (isConnected) {
       router.push("/jugador");
     }
-    //Aramr  leaveRoom en el back -> Sacar al jugador de la bdd
   }
 
   return (
@@ -96,26 +94,18 @@ export default function Chats() {
       <div className={styles.chatArea}>
         <div className={styles.chatContainer}>
           <div className={styles.messagesArea}>
-            {message.length == 0 ? (
+            {message.length === 0 ? (
               <div className={styles.noMessages}>No hay mensajes</div>
             ) : (
               message.map((msg, idx) => {
                 const idLoggedLocal = localStorage.getItem("idLogged");
-                const MensajeUsuario = (msg.id_usuario = idLoggedLocal); //ia o raro
+                const MensajeUsuario = msg.id_usuario === idLoggedLocal;
                 return (
                   <div
                     key={idx}
-                    className={
-                      MensajeUsuario
-                        ? styles.myMessageRow
-                        : styles.otherMessageRow
-                    }
+                    className={MensajeUsuario ? styles.myMessageRow : styles.otherMessageRow}
                   >
-                    <div
-                      className={
-                        MensajeUsuario ? styles.myMessage : styles.otherMessage
-                      }
-                    >
+                    <div className={MensajeUsuario ? styles.myMessage : styles.otherMessage}>
                       <div className={styles.messageText}>{msg.texto}</div>
                       <div className={styles.messageTime}>{msg.fechayhora}</div>
                     </div>
