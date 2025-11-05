@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Button from "../componentes/Button/Button";
 import Input from "../componentes/Input/input";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,50 +8,53 @@ import styles from "@/app/jugador/jugador.module.css";
 export default function Jugador() {
   const [jugadores, setJugadores] = useState([]);
   const [selectedJugador, setSelectedJugador] = useState("");
-  const searchParams = useSearchParams();
+  const [jugadorInfo, setJugadorInfo] = useState(null); // Nuevo state para guardar la info del jugador
   const [searchTerm, setSearchTerm] = useState("");
   const { socket, isConnected } = useSocket();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const selectedRoom = searchParams.get("nombre_sala");
   const idLogged = searchParams.get("idLogged");
-  const nombreJugador = searchParams.get("nombre_jugador")
 
   useEffect(() => {
     getJugadores();
-    joinRoom();
   }, []);
 
-  function joinRoom() {
-    if (isConnected) {
-      const idLogged = searchParams.get("id_usuario");
-
-      socket.emit("joinRoom", { room: roomName, idLogged: idLogged });
-
+  useEffect(() => {
+    // Si se selecciona un jugador, obtenemos la información de ese jugador
+    if (selectedJugador) {
+      getJugadorPorId(selectedJugador);
     }
-  }
+  }, [selectedJugador]);
 
   async function getJugadores() {
-    let result = await fetch("http://localhost:4000/jugadores");
-    let response = await result.json();
+    const result = await fetch("http://localhost:4000/jugadores");
+    const response = await result.json();
     setJugadores(response.players);
+  }
+
+  async function getJugadorPorId(idJugador) {
+    const result = await fetch(`http://localhost:4000/jugadores/${idJugador}`);
+    const response = await result.json();
+    setJugadorInfo(response.player); // Guardamos la información del jugador en el estado
   }
 
   const filteredJugadores = jugadores.filter(
     (jugador) =>
-      jugador.nombre_jugador.toLowerCase().includes(searchTerm.toLowerCase()) //filtra los jugadores que contengan lo que escribí
+      jugador.nombre_jugador.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setSelectedJugador("");
+    setSelectedJugador(""); // Reseteamos el jugador seleccionado cuando cambia la búsqueda
   };
 
   function handleJugar() {
-    // cambiar menos router.push
-    const jugadorObj = jugadores.find((j) => j.id_jugador === parseInt(selectedJugador));
-    const fotoJugador = jugadorObj?.foto_url || jugadorObj?.img_url || "";
-    const nombreJugadorSeleccionado = jugadorObj?.nombre_jugador || nombreJugador;
-    router.push(`/chats?idLogged=${idLogged}&room=${idSala}`)
+    if (jugadorInfo) {
+      const fotoJugador = jugadorInfo.img_url;
+      const nombreJugadorSeleccionado = jugadorInfo.nombre_jugador;
+      router.push(`/chats?idLogged=${idLogged}&room=${selectedRoom}`);
+    }
   }
 
   return (
@@ -76,7 +77,7 @@ export default function Jugador() {
             className={styles.select}
             value={selectedJugador}
             onChange={(e) => setSelectedJugador(e.target.value)}
-            size={Math.min(filteredJugadores.length + 1, 4)} //muestra máximo 4 opciones asi el select no ocupa toda la pantalla
+            size={Math.min(filteredJugadores.length + 1, 4)} // Muestra máximo 4 opciones
           >
             {filteredJugadores.map((jugador) => (
               <option key={jugador.id_jugador} value={jugador.id_jugador}>
@@ -87,15 +88,9 @@ export default function Jugador() {
         </div>
       )}
 
-      {/*cambiar*/}
-      {selectedJugador && (
+      {selectedJugador && jugadorInfo && (
         <div className={styles.selectedInfo}>
-          <strong>Jugador seleccionado:</strong>{" "}
-          {
-            jugadores.find((j) => j.id_jugador === parseInt(selectedJugador))
-              ?.nombre_jugador
-          }
-          {/*Busca el jugador por ID, conviértelo a número y muestra su nombre (si existe)*/}
+          <strong>Jugador seleccionado:</strong> {jugadorInfo.nombre_jugador}
         </div>
       )}
 
