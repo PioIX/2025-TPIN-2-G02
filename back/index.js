@@ -44,6 +44,7 @@ io.use((socket, next) => {
 */
 
 
+
 let contadorParticipantes = 0;
 
 io.on("connection", (socket) => {
@@ -114,7 +115,9 @@ io.on("connection", (socket) => {
 
 
   socket.on('sendMessage', (data) => {
+    console.log("Mensaje recibido:", data.message);
     io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
+    socket.emit('newMessage', { room: req.session.room, message: data });
   });
   socket.on('pingAll', (data) => {
     console.log("PING ALL: ", data);
@@ -124,6 +127,8 @@ io.on("connection", (socket) => {
     console.log("Disconnect");
   });
 });
+
+
 
 
 // ========================================

@@ -1,6 +1,6 @@
 //🔹 Obtener jugadores
 async function getJugadores() {
-  const res = await fetch("http://localhost:3000/jugadores");
+  const res = await fetch("http://localhost:4000/jugadores");
   const data = await res.json();
   console.log("Jugadores:", data);
   return data;
@@ -8,7 +8,7 @@ async function getJugadores() {
 
 //🔹 Crear jugador
 async function crearJugador(nombre_jugador, img_url) {
-  const res = await fetch("http://localhost:3000/jugadores", {
+  const res = await fetch("http://localhost:4000/jugadores", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nombre_jugador, img_url })
@@ -21,7 +21,7 @@ async function crearJugador(nombre_jugador, img_url) {
 
 //🔹 Obtener todas las partidas
 async function getPartidas() {
-  const res = await fetch("http://localhost:3000/partidas");
+  const res = await fetch("http://localhost:4000/partidas");
   const data = await res.json();
   console.log("Partidas:", data);
   return data;
@@ -70,7 +70,7 @@ async function getMensajes(id_partida) {
 
 //🔹 Enviar mensaje
 async function enviarMensaje(contenido, id_usuario, id_partida) {
-  const res = await fetch("http://localhost:3000/mensajes", {
+  const res = await fetch("http://localhost:4000/mensajes", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contenido, id_usuario, id_partida })
