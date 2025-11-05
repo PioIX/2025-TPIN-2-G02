@@ -37,6 +37,7 @@ export default function Chats() {
     if (!socket) return;
     socket.on("newMessage", (data) => {
       let newMessage = data.message;
+      console.log("Nuevo mensaje recibido:", data);
       setMessage((prevMessages) => [...prevMessages, newMessage]);
     });
     return () => {
@@ -53,9 +54,9 @@ export default function Chats() {
     // Enviar mensaje al servidor
     // Actualizar estado localmente
     const resultEnviarMensaje= await fetch.enviarMensaje(sendMessage, idLogged, room);
-    console.log("Mensaje enviado:", resultEnviarMensaje);
+    console.log("Mensaje enviado:", resultEnviarMensaje, " Texto enviado:", sendMessage);
     // Enviar por socket elmensaje
-    socket.emit("sendMessage", { message: sendMessage });
+    socket.emit("sendMessage", { message: sendMessage, id:idLogged });
   }
   // Pablo dijo que probaramos si funciona esto.
 
