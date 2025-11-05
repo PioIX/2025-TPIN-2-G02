@@ -49,13 +49,9 @@ export default function Chats() {
   }, [socket]);
 
   async function send() {
-    const fecha = new Date();
-    const dia = fecha.toISOString().slice(0, 10);
-    const hora = fecha.getHours().toString().padStart(2, "0");
-    const minutos = fecha.getMinutes().toString().padStart(2, "0");
-    const resultado = `${dia} ${hora}:${minutos}`;
     const resultEnviarMensaje = await fetch.enviarMensaje(sendMessage, idLogged, room);
     console.log("Mensaje enviado:", resultEnviarMensaje, " Texto enviado:", sendMessage);
+    console.log("Enviando mensaje:", sendMessage);
     socket.emit("sendMessage", { message: sendMessage, id:idLogged });
   }
 
