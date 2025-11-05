@@ -215,6 +215,28 @@ app.get("/jugadores", async (req, res) => {
   }
 });
 
+// Endpoint para obtener un jugador específico por su id_jugador
+app.get("/jugadores/:id_jugador", async (req, res) => {
+  const { id_jugador } = req.params;  // Obtenemos el id_jugador de la URL
+
+  try {
+    // Realiza la consulta a la base de datos para obtener el jugador
+    const players = await realizarQuery("SELECT * FROM Jugadores WHERE id_jugador = ?", [id_jugador]);
+
+    // Si no se encuentra ningún jugador, devolvemos un error 404
+    if (players.length === 0) {
+      return res.status(404).json({ error: "Jugador no encontrado" });
+    }
+
+    // Si encontramos el jugador, lo devolvemos
+    res.json({ player: players[0] });
+  } catch (err) {
+    // En caso de error, devolvemos el mensaje de error
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 app.post("/jugadores", async (req, res) => {
   const { nombre_jugador, img_url } = req.body;
   try {
