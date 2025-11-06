@@ -113,9 +113,18 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("joinRoomChat" , (data) => {
+    console.log("🚀 ~ io.on ~ req.session.room (chat):", req.session.room);
+    if (req.session.room != undefined) {
+      socket.leave(req.session.room);
+    }
+    req.session.room = data.room;
+    socket.join(req.session.room);
+  });
+
 
   socket.on('sendMessage', (data) => {
-    console.log("Mensaje recibido:", data.message);
+    console.log("Mensaje recibido:", data.message, "Y la sala: ", req.session.room);
     io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
     socket.emit('newMessage', { room: req.session.room, message: data });
   });

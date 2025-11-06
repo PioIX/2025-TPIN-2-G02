@@ -13,35 +13,50 @@ const SOCKET_URL_REMOTE = "181.47.29.35";
 export default function Chats() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Recoger los parámetros de la URL
   const idJugadorSeleccionado = searchParams.get("jugador");
   const room = searchParams.get("room");
-  const fotoJugadorSeleccionado = searchParams.get("img_url"); // Obtén la URL de la imagen
+  const fotoJugadorSeleccionado = searchParams.get("img_url");
   const { socket, isConnected } = useSocket({ serverUrl: SOCKET_URL_LOCAL });
-  
+
   const [idLogged, setIdLogged] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [selectedJugador, setSelectedJugador] = useState(null);
   const [cantidadUsers, setCantidadUsers] = useState(0);
-  const [chat, setChats] = useState([]);
   const [sendMessage, setSendMessage] = useState("");
   const [message, setMessage] = useState([]);
-  const [chatSelectedById, setChatSelected] = useState(null);
-  const [chatSelectedByName, setChatName] = useState("");
-  const [chatSelectedByImg, setChatImg] = useState("");
+  const [chatMessages, setChatMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [message, chatSelectedById]);
+    const idLogged = searchParams.get("idLogged");
+    if (idLogged) {
+      setIdLogged(idLogged);
+    }
+
+    
+
+  }, []);
+
+  useEffect(() => {
+    if (isConnected) {
+      socket.emit("joinRoomChat", { room: room });
+    }
+  }, [isConnected])
 
   useEffect(() => {
     if (!socket) return;
     socket.on("newMessage", (data) => {
-      let newMessage = data.message;
-      console.log("Nuevo mensaje recibido:", data);
-      setMessage((prevMessages) => [...prevMessages, newMessage]);
+      if (idLogged != data.message.id) {
+        console.log("Nuevo mensaje recibido:", data.message.message);
+        let newMessage = data.message.message;
+        console.log("Mensajes:", message);
+        let arr = message
+        arr.push(newMessage);
+        setMessage(arr); //revisar, recibe el mensaje por consola pero no se guarda en el vector mensajes
+        setChatMessages(prev => [...prev, newMessage]);
+      }
     });
     return () => {
       socket.off("newMessage");
@@ -49,10 +64,24 @@ export default function Chats() {
   }, [socket]);
 
   async function send() {
+    if (!sendMessage) return;
+
+    const idLogged = searchParams.get("idLogged");
+    setIdLogged(idLogged);
+
     const resultEnviarMensaje = await fetch.enviarMensaje(sendMessage, idLogged, room);
     console.log("Mensaje enviado:", resultEnviarMensaje, " Texto enviado:", sendMessage);
-    console.log("Enviando mensaje:", sendMessage);
-    socket.emit("sendMessage", { message: sendMessage, id:idLogged });
+
+    const newMessage = {
+      texto: sendMessage,
+      id_usuario: idLogged,
+      fechayhora: new Date().toLocaleTimeString()
+    };
+    setMessage([newMessage]);
+
+    socket.emit("sendMessage", { message: sendMessage, id: idLogged });
+
+    setSendMessage("");
   }
 
   function handleKeyDown(e) {
