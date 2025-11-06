@@ -79,7 +79,12 @@ export default function socketPage() {
                     <div key={sala.id_sala} className={styles.sala}>
                         <p>{sala.nombre}</p>
                         <p>{sala.cantidad_participantes} / {sala.max_jugadores} </p>
-                        <Button text={"Unirse"} onClick={() => joinRoom(sala.id_sala)} />
+                        {
+                        (sala.cantidad_participantes < sala.max_jugadores) ? 
+                            <Button text={"Unirse"} onClick={() => joinRoom(sala.id_sala)} />
+                            :
+                            <p>Sala llena</p>
+                        }
                     </div>
                 ))}
 
