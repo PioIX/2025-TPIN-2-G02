@@ -50,12 +50,13 @@ export default function Chats() {
     socket.on("newMessage", (data) => {
       if (idLogged != data.message.id) {
         console.log("Nuevo mensaje recibido:", data.message.message);
-        let newMessage = data.message.message;
-        console.log("Mensajes:", message);
-        let arr = message
-        arr.push(newMessage);
-        setMessage(arr); //revisar, recibe el mensaje por consola pero no se guarda en el vector mensajes
-        setChatMessages(prev => [...prev, newMessage]);
+        const newMessage = {
+          texto:  data.message.message,
+          id_usuario: data.message.id,
+          fechayhora: new Date().toLocaleTimeString()
+        };
+        
+        setMessage(prev => [...prev, newMessage]);
       }
     });
     return () => {
@@ -77,7 +78,7 @@ export default function Chats() {
       id_usuario: idLogged,
       fechayhora: new Date().toLocaleTimeString()
     };
-    setMessage([newMessage]);
+    setMessage(prev => [...prev, newMessage]);
 
     socket.emit("sendMessage", { message: sendMessage, id: idLogged });
 
