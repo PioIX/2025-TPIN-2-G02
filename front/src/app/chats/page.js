@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
 import Button from "@/app/componentes/Button/Button";
 import styles from "./chats.module.css";
-import fetch from "../componentes/fetch";
+import Input from "../componentes/Input/input";
 
 const SOCKET_URL_LOCAL = "ws://localhost:4000/";
 const SOCKET_URL_REMOTE = "181.47.29.35";
@@ -22,12 +22,15 @@ export default function Chats() {
 
   const [idLogged, setIdLogged] = useState(null);
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
-  const [selectedJugador, setSelectedJugador] = useState(null);
+  const [selectedJugador, setSelectedJugador] = useState("");
   const [cantidadUsers, setCantidadUsers] = useState(0);
   const [sendMessage, setSendMessage] = useState("");
   const [message, setMessage] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const messagesEndRef = useRef(null);
+  const [allowSearch,setAllowSearch] = useState(false);
+  const [jugadores, setJugadores] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const idLogged = searchParams.get("idLogged");
@@ -35,9 +38,39 @@ export default function Chats() {
       setIdLogged(idLogged);
     }
 
-    
-
   }, []);
+
+   const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setSelectedJugador(""); // Reseteamos el jugador seleccionado cuando cambia la búsqueda
+  };
+
+
+  
+  useEffect(() => {
+    getJugadores();
+  }, []);
+
+  async function getJugadores() {
+    const result = await fetch("http://localhost:4000/jugadores");
+    const response = await result.json();
+
+    setJugadores(response.players);
+  }
+  
+  function handleChangeSearch(){
+    if (allowSearch) {
+      setAllowSearch(false)
+    } else {
+      setAllowSearch(true)
+    }
+  }
+
+  const filteredJugadores = jugadores.filter(
+    (jugador) =>
+      jugador.nombre_jugador.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
 
   useEffect(() => {
     if (isConnected) {
@@ -138,7 +171,7 @@ export default function Chats() {
                   </div>
                 );
               })
-            )}
+            )} 
             <div ref={messagesEndRef} />
           </div>
           <div className={styles.inputWrapper}>
@@ -154,6 +187,36 @@ export default function Chats() {
               ➤
             </button>
           </div>
+          <button className={styles.botoncito}onClick={handleChangeSearch}> Tu jugador es... </button>
+          {
+            allowSearch  && (
+              <>
+              <div className={styles.searchBox}>
+            <Input
+              type="text"
+              placeholder="Buscar jugador..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              name="searchJugador"
+            />
+          </div>
+          <div className={styles.searchBox}>
+            <select
+              className={styles.select}
+              value={selectedJugador}
+              onChange={(e) => setSelectedJugador(e.target.value)}
+              size={Math.min(filteredJugadores.length + 1, 4)} // Muestra máximo 4 opciones
+            >
+              {filteredJugadores.map((jugador) => (
+                <option key={jugador.id_jugador} value={jugador.id_jugador}>
+                  {jugador.nombre_jugador} 
+                </option>
+              ))}
+            </select>
+          </div>
+          </>
+        )
+          }
         </div>
       </div>
     </div>
