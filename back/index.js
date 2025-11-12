@@ -37,56 +37,102 @@ io.use((socket, next) => {
 });
 
 let contadorParticipantes = 0;
-let salas = [{cantidad_participantes:0, id_sala:1, max_jugadores:2, nombre_sala: "Sala_1"} ,{cantidad_participantes:0, id_sala:2, max_jugadores:2, nombre_sala: "Sala_2"}, {cantidad_participantes:0,  id_sala:3, max_jugadores:2, nombre_sala: "Sala_3"}, {cantidad_participantes:0, id_sala:4, max_jugadores:2, nombre_sala: "Sala_4"}];
+let salas = [{ cantidad_participantes: 0, id_sala: 1, max_jugadores: 2, nombre_sala: "Sala_1" }, { cantidad_participantes: 0, id_sala: 2, max_jugadores: 2, nombre_sala: "Sala_2" }, { cantidad_participantes: 0, id_sala: 3, max_jugadores: 2, nombre_sala: "Sala_3" }, { cantidad_participantes: 0, id_sala: 4, max_jugadores: 2, nombre_sala: "Sala_4" }];
 
 io.on("connection", (socket) => {
   const req = socket.request;
 
   socket.on('leaveRoom', async (data) => {
-    await realizarQuery(`
+    let id_sala = await realizarQuery(`
+    SELECT id_sala 
+    FROM Salas 
+    WHERE nombre_sala = '${data.room}'
+  `);
+
+    if (id_sala && id_sala.length > 0) {
+      const salaIndex = id_sala[0].id_sala - 1;
+      salas[salaIndex].cantidad_participantes -= 1;
+
+      await realizarQuery(`
       UPDATE Salas
-      SET Salas.cantidad_participantes = Salas.cantidad_participantes - 1
-      WHERE Salas.nombre_sala = '${data.room}';
+      SET cantidad_participantes = ${salas[salaIndex].cantidad_participantes}
+      WHERE id_sala = ${id_sala[0].id_sala}
     `);
+
+      // Emitir a todos la actualización
+      io.emit('cantJugadores', {
+        id_sala: id_sala[0].id_sala,
+        cantidad_participantes: salas[salaIndex].cantidad_participantes
+      });
+    }
   });
 
   socket.on('joinRoom', async (data) => {
     console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
+
     let id_sala = await realizarQuery(`
-      SELECT Salas.id_sala
-      FROM Salas
-      WHERE Salas.nombre_sala = '${data.room}';
-    `);
+    SELECT id_sala 
+    FROM Salas 
+    WHERE id_sala = ${data.room}
+  `);
 
     console.log("ID SALA JOINROOM:", id_sala);
 
+    // VALIDAR que la sala existe ANTES de continuar
+    if (!id_sala || id_sala.length === 0) {
+      console.log("No existe la sala");
+      socket.emit('roomNotFound', { message: "La sala solicitada no existe." });
+      return;
+    }
+
+    const salaIndex = id_sala[0].id_sala - 1;
+
+    // Si el usuario ya estaba en otra sala, salir de ella
     if (req.session.room != undefined) {
       socket.leave(req.session.room);
-      salas[id_sala[0].id_sala - 1].cantidad_participantes -= 1;
+      salas[salaIndex].cantidad_participantes -= 1;
+
+      // Emitir actualización de la sala anterior
+      io.emit('cantJugadores', {
+        id_sala: id_sala[0].id_sala,
+        cantidad_participantes: salas[salaIndex].cantidad_participantes
+      });
     }
 
     req.session.room = data.room;
-    
-    if (salas[id_sala[0].id_sala - 1].cantidad_participantes >= 2) {
-      console.log('maxPlayersReached')
-      console.log(cantidadUsuarios)
+
+    // Verificar si la sala está llena
+    if (salas[salaIndex].cantidad_participantes >= 2) {
+      console.log('maxPlayersReached');
       socket.emit('maxPlayersReached', { message: "Se ha alcanzado el máximo de jugadores en esta sala." });
-    } else {
-      
-      if (id_sala.length == 0) {
-        console.log("No existe la sala");
-      } else {
-        salas[id_sala[0].id_sala - 1].cantidad_participantes += 1;
-        console.log("Cantidad participantes:", salas[id_sala[0].id_sala - 1].cantidad_participantes);
-        socket.join(req.session.room);
-        io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
-        io.to(req.session.room).emit('userJoined', { 
-          user: req.session.user, 
-          message: "Un nuevo jugador se ha unido a la sala.",
-          roomId: req.session.room // Emitimos la ID de la sala para actualizar el cliente
-        });
-      }
+      return; // No permitir unirse
     }
+
+    // Incrementar participantes
+    salas[salaIndex].cantidad_participantes += 1;
+    console.log("Cantidad participantes:", salas[salaIndex].cantidad_participantes);
+
+    // Actualizar en la base de datos
+    await realizarQuery(`
+    UPDATE Salas
+    SET cantidad_participantes = ${salas[salaIndex].cantidad_participantes}
+    WHERE id_sala = ${id_sala[0].id_sala}
+  `);
+
+    socket.join(req.session.room);
+
+    // EMITIR A TODOS los clientes la actualización de participantes
+    io.emit('cantJugadores', {
+      id_sala: id_sala[0].id_sala,
+      cantidad_participantes: salas[salaIndex].cantidad_participantes
+    });
+
+    io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
+    io.to(req.session.room).emit('userJoined', {
+      user: req.session.user,
+      message: "Un nuevo jugador se ha unido a la sala.",
+      roomId: req.session.room
+    });
   });
 
   socket.on('joinRoomChat', (data) => {
