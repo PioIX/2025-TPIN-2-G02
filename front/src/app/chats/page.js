@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
+import { useIp } from "@/hooks/useIp";
 import Button from "@/app/componentes/Button/Button";
 import styles from "./chats.module.css";
 import Input from "../componentes/Input/input";
@@ -36,6 +37,7 @@ export default function Chats() {
   const [allowSearch, setAllowSearch] = useState(false);
   const [jugadores, setJugadores] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const { ip } = useIp();
  
   useEffect(() => {
     const idLogged = searchParams.get("idLogged");
@@ -55,8 +57,10 @@ export default function Chats() {
     getJugadores();
   }, []);
  
+
+  
   async function getJugadores() {
-    const result = await fetch("http://localhost:4000/jugadores");
+    const result = await fetch(`http://${ip}:4000/jugadores`);
     const response = await result.json();
     setJugadores(response.players);
   }
@@ -64,7 +68,7 @@ export default function Chats() {
 
   // Renombramos la función para evitar el conflicto con el estado
   async function postMensaje(contenido, id_usuario, id_partida) {
-    const res = await fetch("http://localhost:4000/mensajes", {
+    const res = await fetch(`http://${ip}:4000/mensajes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contenido, id_usuario, id_partida })

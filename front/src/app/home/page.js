@@ -7,6 +7,7 @@ import styles from "./home.module.css";
 import { useSocket } from "@/hooks/useSocket";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useIp } from "@/hooks/useIp";
 
 export default function socketPage() {
     const { socket, isConnected } = useSocket();
@@ -15,6 +16,7 @@ export default function socketPage() {
     const [salas, setSalas] = useState([]);
     const idLogged = searchParams.get("idLogged");
     const selectedRoom = searchParams.get("nombre_sala");
+    const { ip } = useIp();
     useEffect(() => {
         getSalas()
         if (!socket) return;
@@ -57,7 +59,7 @@ export default function socketPage() {
     }, [socket]);
 
     async function getSalas() {
-        let result = await fetch("http://localhost:4000/Salas");
+        let result = await fetch(`http://${ip}:4000/Salas`);
         let response = await result.json();
         console.log("SALAS!!", response)
         setSalas(response.sala);
