@@ -1,5 +1,9 @@
+"use client"
+
 import Image from "next/image";
 import styles from "./page.module.css";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   return (
