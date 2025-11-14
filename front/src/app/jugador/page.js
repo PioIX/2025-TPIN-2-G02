@@ -6,6 +6,7 @@ import Input from "../componentes/Input/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
 import styles from "@/app/jugador/jugador.module.css";
+import { useIp } from "@/hooks/useIp";
 
 export default function Jugador() {
   const [jugadores, setJugadores] = useState([]);
@@ -17,6 +18,8 @@ export default function Jugador() {
   const searchParams = useSearchParams();
   const selectedRoom = searchParams.get("room");
   const idLogged = searchParams.get("idLogged");
+  const { ip } = useIp();
+
 
   useEffect(() => {
     getJugadores();
@@ -30,13 +33,13 @@ export default function Jugador() {
   }, [selectedJugador]);
 
   async function getJugadores() {
-    const result = await fetch("http://localhost:4000/jugadores");
+    const result = await fetch(`http://${ip}:4000/jugadores`);
     const response = await result.json();
     setJugadores(response.players);
   }
 
   async function getJugadorPorId(idJugador) {
-    const result = await fetch(`http://localhost:4000/jugadores/${idJugador}`);
+    const result = await fetch(`http://${ip}:4000/jugadores/${idJugador}`);
     const response = await result.json();
     setJugadorInfo(response.player); // Guardamos la información del jugador en el estado
   }

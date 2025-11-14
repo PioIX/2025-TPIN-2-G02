@@ -6,6 +6,7 @@ import { Poppins } from "next/font/google";
 import Title from "../componentes/Title/Title";
 import Button from "../componentes/Button/Button";
 import styles from "./login.module.css";
+import { useIp } from "@/hooks/useIp";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { ip } = useIp();
 
   async function handleLogin() {
     setError("");
@@ -29,7 +31,7 @@ export default function LoginPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/usuarioLogin", {
+      const res = await fetch(`http://${ip}:4000/usuarioLogin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ gmail: email, contraseña: password })

@@ -7,6 +7,7 @@ import { Poppins } from "next/font/google";
 import Title from "../componentes/Title/Title";
 import Button from "../componentes/Button/Button";
 import styles from "./register.module.css";
+import { useIp } from "@/hooks/useIp";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -20,6 +21,7 @@ export default function Registro() {
   const [gmail, setGmail] = useState("");
   const [contraseña, setContraseña] = useState(""); // renombrado
   const [error, setError] = useState("");
+  const { ip } = useIp();
 
   async function handleRegister() {
     setError("");
@@ -30,7 +32,7 @@ export default function Registro() {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/usuarioRegistro", {
+      const res = await fetch(`http://${ip}:4000/usuarioRegistro`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
