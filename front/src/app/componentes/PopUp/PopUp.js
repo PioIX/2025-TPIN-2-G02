@@ -8,7 +8,7 @@ function Popup({ showPopup, closePopup, children }) {
   return (
     <div onClick={closePopup} aria-hidden={!showPopup}>
       <div onClick={(e) => e.stopPropagation()}>
-        {children} {/* Content of the popup */}
+        {children} {/* Content of the popup */}aaaaaaaa
       </div>
     </div>
   );

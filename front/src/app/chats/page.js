@@ -8,6 +8,7 @@ import { useIp } from "@/hooks/useIp";
 import Button from "@/app/componentes/Button/Button";
 import styles from "./chats.module.css";
 import Input from "../componentes/Input/input";
+import Popup from "../componentes/PopUp/PopUp";
 
 
 const SOCKET_URL_LOCAL = "ws://localhost:4000/";
@@ -38,6 +39,8 @@ export default function Chats() {
   const [jugadores, setJugadores] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { ip } = useIp();
+  const [showPopup, setShowPopup] = useState(true);
+
  
   useEffect(() => {
     const idLogged = searchParams.get("idLogged");
@@ -233,7 +236,12 @@ export default function Chats() {
                   <select
                     className={styles.select}
                     value={selectedJugador}
-                    onChange={(e) => setSelectedJugador(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedJugador(e.target.value)
+                      if (selectedJugador == jugadorRival) {
+                        setShowPopup(true)
+                      } 
+                    }}
                     size={Math.min(filteredJugadores.length + 1, 4)} // Muestra máximo 4 opciones
                   >
                     {filteredJugadores.map((jugador) => (
@@ -247,6 +255,13 @@ export default function Chats() {
             )
           }
         </div>
+        {
+          showPopup && (
+          <>
+            HOLA
+          </>
+          )
+        }
       </div>
     </div>
   );
