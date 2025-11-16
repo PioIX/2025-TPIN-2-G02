@@ -8,9 +8,10 @@ import { useIp } from "@/hooks/useIp";
 import Button from "@/app/componentes/Button/Button";
 import styles from "./chats.module.css";
 import Input from "../componentes/Input/input";
+import Popup from "../componentes/PopUp/PopUp";
 
 
-const SOCKET_URL_LOCAL = "ws://localhost:4000/";
+const SOCKET_URL_LOCAL = `ws://localhost:4000/`;
 const SOCKET_URL_REMOTE = "181.47.29.35";
 
 
@@ -38,7 +39,13 @@ export default function Chats() {
   const [jugadores, setJugadores] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { ip } = useIp();
- 
+  const [popupGanaste, setPopupGanaste] = useState(false);
+  const [popupError, setPopupError] = useState(false);
+  const [popupPerdiste, setPopupPerdiste] = useState(false);
+
+
+
+
   useEffect(() => {
     const idLogged = searchParams.get("idLogged");
     if (idLogged) {
@@ -56,9 +63,9 @@ export default function Chats() {
   useEffect(() => {
     getJugadores();
   }, []);
- 
 
-  
+
+
   async function getJugadores() {
     const result = await fetch(`http://${ip}:4000/jugadores`);
     const response = await result.json();
@@ -95,6 +102,71 @@ export default function Chats() {
       socket.emit("joinRoomChat", { room: room });
     }
   }, [isConnected]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("guessResult", ({ success }) => {
+      // Cerrar ambos popups antes de abrir uno nuevo
+      setPopupGanaste(false);
+      setPopupError(false);
+
+      if (success) {
+        setPopupGanaste(true);
+
+        // Cerrar popup automáticamente
+        setTimeout(() => setPopupGanaste(false), 2000);
+      } else {
+        setPopupError(true);
+
+        // Cerrar popup automáticamente
+        setTimeout(() => setPopupError(false), 2000);
+      }
+    });
+
+    return () => {
+      socket.off("guessResult");
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleEndGame = ({ winner }) => {
+      console.log("🔥 La partida terminó. Ganador:", winner);
+
+      if (String(winner) === String(idLogged)) {
+        setPopupGanaste(true);
+      } else {
+        setPopupPerdiste(true);
+      }
+
+      setTimeout(() => {
+        router.push(`/inicio?idLogged=${idLogged}`);
+      }, 2000);
+    };
+
+    socket.on("endGame", handleEndGame);
+
+    return () => {
+      socket.off("endGame", handleEndGame);
+    };
+  }, [socket, idLogged]);
+
+
+
+
+  function guessJugador() {
+    if (!selectedJugador) return;
+
+    socket.emit("guessPlayer", {
+      room,
+      userId: idLogged,
+      guessedPlayerId: selectedJugador
+    });
+  }
+
+
 
 
   useEffect(() => {
@@ -165,6 +237,7 @@ export default function Chats() {
       <div className={styles.volverBtnContainer}>
         <Button text="VOLVER" onClick={handleVolver} />
       </div>
+
       <div className={styles.topHeader}>
         <div className={styles.headerCol}>
           <span className={styles.headerLabel}>MI JUGADOR:</span>
@@ -179,8 +252,11 @@ export default function Chats() {
           )}
         </div>
       </div>
+
       <div className={styles.chatArea}>
         <div className={styles.chatContainer}>
+
+          {/* AREA DE MENSAJES */}
           <div className={styles.messagesArea}>
             {message.length === 0 ? (
               <div className={styles.noMessages}>No hay mensajes</div>
@@ -188,14 +264,27 @@ export default function Chats() {
               message.map((msg, idx) => {
                 const idLoggedLocal = localStorage.getItem("idLogged");
                 const MensajeUsuario = msg.id_usuario === idLoggedLocal;
+
                 return (
                   <div
                     key={idx}
-                    className={MensajeUsuario ? styles.myMessageRow : styles.otherMessageRow}
+                    className={
+                      MensajeUsuario
+                        ? styles.myMessageRow
+                        : styles.otherMessageRow
+                    }
                   >
-                    <div className={MensajeUsuario ? styles.myMessage : styles.otherMessage}>
+                    <div
+                      className={
+                        MensajeUsuario
+                          ? styles.myMessage
+                          : styles.otherMessage
+                      }
+                    >
                       <div className={styles.messageText}>{msg.texto}</div>
-                      <div className={styles.messageTime}>{msg.fechayhora}</div>
+                      <div className={styles.messageTime}>
+                        {msg.fechayhora}
+                      </div>
                     </div>
                   </div>
                 );
@@ -203,6 +292,8 @@ export default function Chats() {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* INPUT MENSAJES */}
           <div className={styles.inputWrapper}>
             <input
               type="text"
@@ -216,38 +307,88 @@ export default function Chats() {
               ➤
             </button>
           </div>
-          <button className={styles.botoncito} onClick={handleChangeSearch}> Tu jugador es... </button>
-          {
-            allowSearch && (
-              <>
-                <div className={styles.searchBox}>
-                  <Input
-                    type="text"
-                    placeholder="Buscar jugador..."
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    name="searchJugador"
-                  />
-                </div>
-                <div className={styles.searchBox}>
-                  <select
-                    className={styles.select}
-                    value={selectedJugador}
-                    onChange={(e) => setSelectedJugador(e.target.value)}
-                    size={Math.min(filteredJugadores.length + 1, 4)} // Muestra máximo 4 opciones
-                  >
-                    {filteredJugadores.map((jugador) => (
-                      <option key={jugador.id_jugador} value={jugador.id_jugador}>
-                        {jugador.nombre_jugador}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )
-          }
+
+          {/* MOSTRAR BUSCADOR DE JUGADOR */}
+          <button className={styles.botoncito} onClick={handleChangeSearch}>
+            Tu jugador es...
+          </button>
+
+          {allowSearch && (
+            <>
+              {/* Input búsqueda */}
+              <div className={styles.searchBox}>
+                <Input
+                  type="text"
+                  placeholder="Buscar jugador..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  name="searchJugador"
+                />
+              </div>
+
+              {/* Selector de jugadores */}
+              <div className={styles.searchBox}>
+                <select
+                  className={styles.select}
+                  value={selectedJugador}
+                  onChange={(e) => setSelectedJugador(e.target.value)}
+                  size={Math.min(filteredJugadores.length + 1, 4)}
+                >
+                  {filteredJugadores.map((jugador) => (
+                    <option
+                      key={jugador.id_jugador}
+                      value={jugador.id_jugador}
+                    >
+                      {jugador.nombre_jugador}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* BOTÓN ADIVINAR */}
+              <button
+                className={styles.botoncito}
+                onClick={guessJugador}
+                disabled={!selectedJugador}
+              >
+                ADIVINAR
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* ===================== */}
+      {/*     POPUP GANASTE     */}
+      {/* ===================== */}
+      <Popup showPopup={popupGanaste} closePopup={() => setPopupGanaste(false)}>
+        <div className={styles.popupContent}>
+          <h2>🎉 ¡GANASTE!</h2>
+          <p>Adivinaste correctamente el jugador del rival.</p>
+        </div>
+      </Popup>
+
+      {/* =============================== */}
+      {/*     POPUP JUGADOR INCORRECTO    */}
+      {/* =============================== */}
+      <Popup showPopup={popupError} closePopup={() => setPopupError(false)}>
+        <div className={styles.popupContent}>
+          <h2>❌ Jugador incorrecto</h2>
+          <p>Seguí intentando...</p>
+        </div>
+      </Popup>
+
+      {/* =============================== */}
+      {/*     POPUP PERDISTE (RIVAL)      */}
+      {/* =============================== */}
+      <Popup showPopup={popupPerdiste} closePopup={() => setPopupPerdiste(false)}>
+        <div className={styles.popupContent}>
+          <h2>❌ ¡PERDISTE!</h2>
+          <p>El rival adivinó tu jugador.</p>
+        </div>
+      </Popup>
+
     </div>
   );
+
 }

@@ -36,6 +36,7 @@ io.use((socket, next) => {
   sessionMiddleware(socket.request, {}, next);
 });
 
+let roomPlayers = {};
 let contadorParticipantes = 0;
 let salas = [{ cantidad_participantes: 0, id_sala: 1, max_jugadores: 2, nombre_sala: "Sala_1" }, { cantidad_participantes: 0, id_sala: 2, max_jugadores: 2, nombre_sala: "Sala_2" }, { cantidad_participantes: 0, id_sala: 3, max_jugadores: 2, nombre_sala: "Sala_3" }, { cantidad_participantes: 0, id_sala: 4, max_jugadores: 2, nombre_sala: "Sala_4" }];
 
@@ -50,21 +51,22 @@ io.on("connection", (socket) => {
   `);
 
     if (id_sala && id_sala.length > 0) {
-      const salaIndex = id_sala[0].id_sala - 1;
-      salas[salaIndex].cantidad_participantes -= 1;
+      const IndiceSala = id_sala[0].id_sala - 1;
+      salas[IndiceSala].cantidad_participantes -= 1;
 
       await realizarQuery(`
       UPDATE Salas
-      SET cantidad_participantes = ${salas[salaIndex].cantidad_participantes}
+      SET cantidad_participantes = ${salas[IndiceSala].cantidad_participantes}
       WHERE id_sala = ${id_sala[0].id_sala}
     `);
 
       // Emitir a todos la actualización
       io.emit('cantJugadores', {
         id_sala: id_sala[0].id_sala,
-        cantidad_participantes: salas[salaIndex].cantidad_participantes
+        cantidad_participantes: salas[IndiceSala].cantidad_participantes
       });
     }
+
   });
 
   socket.on('joinRoom', async (data) => {
@@ -81,41 +83,41 @@ io.on("connection", (socket) => {
     // VALIDAR que la sala existe ANTES de continuar
     if (!id_sala || id_sala.length === 0) {
       console.log("No existe la sala");
-      socket.emit('roomNotFound', { message: "La sala solicitada no existe." });
+      socket.emit('roomNotFound', { message: "La sala no existe." });
       return;
     }
 
-    const salaIndex = id_sala[0].id_sala - 1;
+    const IndiceSala = id_sala[0].id_sala - 1;
 
     // Si el usuario ya estaba en otra sala, salir de ella
     if (req.session.room != undefined) {
       socket.leave(req.session.room);
-      salas[salaIndex].cantidad_participantes -= 1;
+      salas[IndiceSala].cantidad_participantes -= 1;
 
       // Emitir actualización de la sala anterior
       io.emit('cantJugadores', {
         id_sala: id_sala[0].id_sala,
-        cantidad_participantes: salas[salaIndex].cantidad_participantes
+        cantidad_participantes: salas[IndiceSala].cantidad_participantes
       });
     }
 
     req.session.room = data.room;
 
     // Verificar si la sala está llena
-    if (salas[salaIndex].cantidad_participantes >= 2) {
+    if (salas[IndiceSala].cantidad_participantes >= 2) {
       console.log('maxPlayersReached');
       socket.emit('maxPlayersReached', { message: "Se ha alcanzado el máximo de jugadores en esta sala." });
       return; // No permitir unirse
     }
 
     // Incrementar participantes
-    salas[salaIndex].cantidad_participantes += 1;
-    console.log("Cantidad participantes:", salas[salaIndex].cantidad_participantes);
+    salas[IndiceSala].cantidad_participantes += 1;
+    console.log("Cantidad participantes:", salas[IndiceSala].cantidad_participantes);
 
     // Actualizar en la base de datos
     await realizarQuery(`
     UPDATE Salas
-    SET cantidad_participantes = ${salas[salaIndex].cantidad_participantes}
+    SET cantidad_participantes = ${salas[IndiceSala].cantidad_participantes}
     WHERE id_sala = ${id_sala[0].id_sala}
   `);
 
@@ -124,7 +126,7 @@ io.on("connection", (socket) => {
     // EMITIR A TODOS los clientes la actualización de participantes
     io.emit('cantJugadores', {
       id_sala: id_sala[0].id_sala,
-      cantidad_participantes: salas[salaIndex].cantidad_participantes
+      cantidad_participantes: salas[IndiceSala].cantidad_participantes
     });
 
     io.to(req.session.room).emit('chat-messages', { user: req.session.user, room: req.session.room });
@@ -158,6 +160,104 @@ io.on("connection", (socket) => {
   socket.on('disconnect', () => {
     console.log("Disconnect");
   });
+
+  socket.on('setSecretPlayer', async (data) => {
+    const { room, playerId, userId } = data;
+
+    try {
+      // Verificar si ya existe un registro para este usuario en esta partida
+      const existente = await realizarQuery(`
+      SELECT * FROM UsuariosPorPartida 
+      WHERE id_usuario = ${userId} AND id_partida = ${room}
+    `);
+
+      if (existente && existente.length > 0) {
+        // Actualizar el jugador seleccionado
+        await realizarQuery(`
+        UPDATE UsuariosPorPartida 
+        SET id_jugador = ${playerId}
+        WHERE id_usuario = ${userId} AND id_partida = ${room}
+      `);
+        console.log(`Usuario ${userId} actualizó su jugador secreto a ${playerId}`);
+      } else {
+        // Insertar nuevo registro
+        await realizarQuery(`
+        INSERT INTO UsuariosPorPartida (id_usuario, id_partida, id_jugador)
+        VALUES (${userId}, ${room}, ${playerId})
+      `);
+        console.log(`Usuario ${userId} estableció jugador secreto ${playerId}`);
+      }
+
+      socket.emit('secretPlayerSet', { success: true });
+    } catch (error) {
+      console.error('Error al guardar jugador secreto:', error);
+      socket.emit('secretPlayerSet', { success: false, error: error.message });
+    }
+
+
+  });
+
+
+  // ====================
+  //  ADIVINAR JUGADOR
+  // ====================
+  socket.on("guessPlayer", ({ room, userId, guessedPlayerId }) => {
+    console.log("⚡ guessPlayer recibido:", { room, userId, guessedPlayerId });
+
+    if (!roomPlayers[room]) {
+      console.log("❌ No existe registro de jugadores en esta sala");
+      return;
+    }
+
+    const playersInRoom = roomPlayers[room];
+    const me = playersInRoom[userId];
+    const opponent = Object.values(playersInRoom).find(p => p.userId !== userId);
+
+    if (!me || !opponent) {
+      console.log("❌ Usuario u oponente no encontrado");
+      return;
+    }
+
+    const myGuess = guessedPlayerId;
+    const opponentChoice = opponent.chosenPlayerId;
+
+    if (myGuess === opponentChoice) {
+      console.log("🎉 ACIERTO DEL JUGADOR");
+
+      // Solo a este socket (el ganador)
+      io.to(socket.id).emit("guessResult", { success: true });
+
+      // Solo al oponente → falló
+      io.to(opponent.socketId).emit("guessResult", { success: false });
+
+      // Avisar a TODOS quién ganó
+      io.to(room).emit("endGame", { winner: userId });
+
+      io.socketsLeave(room);
+    } else {
+      console.log("❌ Falló la adivinanza");
+
+      // Solo al que falló
+      io.to(socket.id).emit("guessResult", { success: false });
+    }
+  });
+
+
+
+  socket.on("choosePlayer", ({ room, userId, chosenPlayerId }) => {
+    if (!roomPlayers[room]) {
+      roomPlayers[room] = {};
+    }
+
+    roomPlayers[room][userId] = {
+      userId,
+      chosenPlayerId
+    };
+
+    console.log(`👌 Jugador elegido en sala ${room}:`, roomPlayers[room]);
+  });
+
+
 });
 
 
