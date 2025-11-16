@@ -56,11 +56,21 @@ export default function Jugador() {
 
   function handleJugar() {
     if (jugadorInfo) {
-      const fotoJugador = jugadorInfo.img_url; 
+      socket.emit("choosePlayer", {
+        room: selectedRoom,
+        userId: idLogged,
+        chosenPlayerId: selectedJugador
+      });
+
+      const fotoJugador = jugadorInfo.img_url;
       const nombreJugadorSeleccionado = jugadorInfo.nombre_jugador;
-      router.push(`/chats?idLogged=${idLogged}&room=${selectedRoom}&jugador=${nombreJugadorSeleccionado}&img_url=${fotoJugador}`);
+
+      router.push(
+        `/chats?idLogged=${idLogged}&room=${selectedRoom}&jugador=${nombreJugadorSeleccionado}&img_url=${fotoJugador}`
+      );
     }
   }
+
 
   return (
     <div className={styles.container}>
@@ -86,7 +96,7 @@ export default function Jugador() {
           >
             {filteredJugadores.map((jugador) => (
               <option key={jugador.id_jugador} value={jugador.id_jugador}>
-                {jugador.nombre_jugador} 
+                {jugador.nombre_jugador}
               </option>
             ))}
           </select>

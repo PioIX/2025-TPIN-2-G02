@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 const useIp = () => { 
-  const [ip, setIp] = useState("10.1.5.100");
+  const [ip, setIp] = useState("192.168.0.73");
 
   return { ip };
 };
