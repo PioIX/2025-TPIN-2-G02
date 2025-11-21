@@ -18,32 +18,28 @@ const SOCKET_URL_REMOTE = "181.47.29.35";
 export default function Chats() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { ip } = useIp();
 
 
-  // Recoger los parámetros de la URL
   const idJugadorSeleccionado = searchParams.get("jugador");
   const room = searchParams.get("room");
   const fotoJugadorSeleccionado = searchParams.get("img_url");
   const { socket, isConnected } = useSocket({ serverUrl: SOCKET_URL_LOCAL });
+  //const [socket, isConnected] = useSocket();
 
 
   const [idLogged, setIdLogged] = useState(null);
-  const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [selectedJugador, setSelectedJugador] = useState("");
-  const [cantidadUsers, setCantidadUsers] = useState(0);
   const [sendMessage, setSendMessage] = useState("");  // Aquí es el estado para el mensaje
   const [message, setMessage] = useState([]);
-  const [chatMessages, setChatMessages] = useState([]);
   const messagesEndRef = useRef(null);
   const [allowSearch, setAllowSearch] = useState(false);
   const [jugadores, setJugadores] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const { ip } = useIp();
+  
   const [popupGanaste, setPopupGanaste] = useState(false);
   const [popupError, setPopupError] = useState(false);
   const [popupPerdiste, setPopupPerdiste] = useState(false);
-
-
 
 
   useEffect(() => {
@@ -106,36 +102,36 @@ export default function Chats() {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("guessResult", ({ success }) => {
+    socket.on("ResultadoDeAcierto", ({ acierto }) => {
       // Cerrar ambos popups antes de abrir uno nuevo
       setPopupGanaste(false);
       setPopupError(false);
 
-      if (success) {
+      if (acierto) {
         setPopupGanaste(true);
 
         // Cerrar popup automáticamente
-        setTimeout(() => setPopupGanaste(false), 2000);
+        setTimeout(() => setPopupGanaste(false), 4000);
       } else {
         setPopupError(true);
 
         // Cerrar popup automáticamente
-        setTimeout(() => setPopupError(false), 2000);
+        setTimeout(() => setPopupError(false), 4000);
       }
     });
 
     return () => {
-      socket.off("guessResult");
+      socket.off("ResultadoDeAcierto");
     };
   }, [socket]);
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleEndGame = ({ winner }) => {
-      console.log("🔥 La partida terminó. Ganador:", winner);
+    const handleFinDelJuego = ({ ganador }) => {
+      console.log("🔥 La partida terminó. Ganador:", ganador);
 
-      if (String(winner) === String(idLogged)) {
+      if (String(ganador) === String(idLogged)) {
         setPopupGanaste(true);
       } else {
         setPopupPerdiste(true);
@@ -146,23 +142,23 @@ export default function Chats() {
       }, 2000);
     };
 
-    socket.on("endGame", handleEndGame);
+    socket.on("finDelJuego", handleFinDelJuego);
 
     return () => {
-      socket.off("endGame", handleEndGame);
+      socket.off("finDelJuego", handleFinDelJuego);
     };
   }, [socket, idLogged]);
 
 
 
 
-  function guessJugador() {
+  function adivinarJugador() {
     if (!selectedJugador) return;
 
-    socket.emit("guessPlayer", {
+    socket.emit("adivinarJugador", {
       room,
       userId: idLogged,
-      guessedPlayerId: selectedJugador
+      idJugadorAdivinado: selectedJugador
     });
   }
 
@@ -348,7 +344,7 @@ export default function Chats() {
               {/* BOTÓN ADIVINAR */}
               <button
                 className={styles.botoncito}
-                onClick={guessJugador}
+                onClick={adivinarJugador}
                 disabled={!selectedJugador}
               >
                 ADIVINAR
@@ -358,9 +354,7 @@ export default function Chats() {
         </div>
       </div>
 
-      {/* ===================== */}
-      {/*     POPUP GANASTE     */}
-      {/* ===================== */}
+
       <Popup showPopup={popupGanaste} closePopup={() => setPopupGanaste(false)}>
         <div className={styles.popupContent}>
           <h2>🎉 ¡GANASTE!</h2>
@@ -368,9 +362,6 @@ export default function Chats() {
         </div>
       </Popup>
 
-      {/* =============================== */}
-      {/*     POPUP JUGADOR INCORRECTO    */}
-      {/* =============================== */}
       <Popup showPopup={popupError} closePopup={() => setPopupError(false)}>
         <div className={styles.popupContent}>
           <h2>❌ Jugador incorrecto</h2>
@@ -378,9 +369,6 @@ export default function Chats() {
         </div>
       </Popup>
 
-      {/* =============================== */}
-      {/*     POPUP PERDISTE (RIVAL)      */}
-      {/* =============================== */}
       <Popup showPopup={popupPerdiste} closePopup={() => setPopupPerdiste(false)}>
         <div className={styles.popupContent}>
           <h2>❌ ¡PERDISTE!</h2>

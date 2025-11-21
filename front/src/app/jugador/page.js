@@ -56,10 +56,10 @@ export default function Jugador() {
 
   function handleJugar() {
     if (jugadorInfo) {
-      socket.emit("choosePlayer", {
+      socket.emit("jugadorSeleccionado", {
         room: selectedRoom,
         userId: idLogged,
-        chosenPlayerId: selectedJugador
+        idJugadorSeleccionado: selectedJugador
       });
 
       const fotoJugador = jugadorInfo.img_url;
